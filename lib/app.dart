@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'presentation/screens/combat_screen.dart';
 import 'presentation/theme/app_theme.dart';
 
 /// Raiz da aplicação.
-///
-/// Ainda sem navegação e sem telas de jogo: essas chegam com US1 (tela de
-/// combate), US2 (inventário) e seguintes. Aqui fica apenas o esqueleto que a
-/// Fase 2 precisa entregar.
 class PixelIdleQuestApp extends ConsumerWidget {
   const PixelIdleQuestApp({super.key});
 
@@ -17,24 +14,7 @@ class PixelIdleQuestApp extends ConsumerWidget {
       title: 'Pixel Idle Quest',
       theme: AppTheme.dark(),
       debugShowCheckedModeBanner: false,
-      home: const _BootScreen(),
-    );
-  }
-}
-
-/// Tela provisória da fundação. Substituída pela tela de combate em US1 (T055).
-class _BootScreen extends StatelessWidget {
-  const _BootScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Pixel Idle Quest\nfundação pronta',
-          textAlign: TextAlign.center,
-        ),
-      ),
+      home: const CombatScreen(),
     );
   }
 }

@@ -115,32 +115,32 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 > Escrever primeiro e garantir que falham antes de implementar.
 
-- [ ] T034 [P] [US1] Testes de M01 combate (CEN-M01-001 a 013, E01, E02) em `test/domain/m01_combat_test.dart`
-- [ ] T035 [P] [US1] Testes do 4º slot em combate (CEN-M01-012, 012b, 012c) em `test/domain/m01_formation_test.dart`
-- [ ] T036 [P] [US1] Testes de M02 classes (CEN-M02-001 a 010, E01, E02) em `test/domain/m02_classes_test.dart`
-- [ ] T037 [P] [US1] Testes de M03 progressão (CEN-M03-001 a 014, E01, E02), incluindo a compensação de 500 gemas em CEN-M03-012, em `test/domain/m03_progression_test.dart`
-- [ ] T038 [P] [US1] Teste de determinismo independente de FPS (300 ticks de 33 ms ≡ 150 de 66 ms) em `test/domain/determinism_test.dart`
+- [x] T034 [P] [US1] Testes de M01 combate (CEN-M01-001 a 013, E01, E02) em `test/domain/m01_combat_test.dart`
+- [x] T035 [P] [US1] Testes do 4º slot em combate (CEN-M01-012, 012b, 012c) em `test/domain/m01_formation_test.dart`
+- [x] T036 [P] [US1] Testes de M02 classes (CEN-M02-001 a 010, E01, E02) em `test/domain/m02_classes_test.dart`
+- [x] T037 [P] [US1] Testes de M03 progressão (CEN-M03-001 a 014, E01, E02), incluindo a compensação de 500 gemas em CEN-M03-012, em `test/domain/m03_progression_test.dart`
+- [x] T038 [P] [US1] Teste de determinismo independente de FPS (300 ticks de 33 ms ≡ 150 de 66 ms) em `test/domain/determinism_test.dart`
 
 ### Implementation for User Story 1
 
-- [ ] T039 [P] [US1] Implementar `HeroClassDefinition` e `SkillDefinition` com carregamento do asset em `lib/domain/entities/hero_class_definition.dart`
-- [ ] T040 [P] [US1] Popular `assets/content/hero_classes.json` com as 6 classes de [M02](mechanics/M02-classes-de-herois.md) — papel, atributos principais, regra de alvo, atributos base, crescimento por nível e habilidades com nível de desbloqueio
-- [ ] T041 [P] [US1] Implementar `Monster` e derivação de atributos a partir de `MonsterTemplate` em `lib/domain/entities/monster.dart`
-- [ ] T042 [P] [US1] Popular `assets/content/monsters.json` com os templates dos 3 atos e os bosses, incluindo `possibleRarities`, `dropChanceModifier` e `isBoss`
-- [ ] T043 [US1] Implementar `CombatEngine.resolveDamage` — `ATK + bônus − DEF` saturado em 1, crítico 2× (R-M01-03 a 05) em `lib/domain/engines/combat_engine.dart`
-- [ ] T044 [US1] Implementar seleção de alvo por `nearest` e `lowestHp`, com troca de alvo após morte, em `lib/domain/engines/targeting.dart`
-- [ ] T045 [US1] Implementar `CombatEngine.tick` em passo fixo retornando `CombatTickResult` conforme [contracts/domain-services.md](contracts/domain-services.md)
-- [ ] T046 [US1] Implementar incapacitação e revive automático de 30 s, sem estado de derrota permanente (R-M01-06, CEN-M01-010) em `lib/domain/engines/combat_engine.dart`
-- [ ] T047 [US1] Implementar `CombatEngine.timeToClearWave` — mesma função de dano do tick, exigida por US4 (`research.md` R3)
-- [ ] T048 [P] [US1] Implementar as 6 mecânicas únicas de classe (provocação, área elemental, penetração de DEF, cura + buff, sangramento, escala com HP) em `lib/domain/engines/class_mechanics.dart`
-- [ ] T049 [US1] Implementar `ProgressionService.grantHeroXp` com resolução de múltiplos níveis em uma chamada (CEN-M03-E01) em `lib/domain/progression/progression_service.dart`
-- [ ] T050 [US1] Implementar nível de conta, concessão de pontos de runa e `recordProgress` monotônico (V-PA-03) em `lib/domain/progression/progression_service.dart`
-- [ ] T051 [US1] Implementar `evaluateFourthSlot` com os três resultados `NoChange`, `Granted` e `AlreadyOwnedCompensated` creditando 500 gemas (CEN-M03-011 a 013, V-ENT-05) em `lib/domain/progression/formation_slots.dart`
-- [ ] T052 [P] [US1] Implementar `HeroComponent` e `MonsterComponent` com animações idle, ataque, hit e morte em `lib/presentation/game/components/`
-- [ ] T053 [P] [US1] Implementar `DamageNumberComponent` flutuante, distinguindo dano normal, crítico e cura, em `lib/presentation/game/components/damage_number_component.dart`
-- [ ] T054 [US1] Implementar os providers Riverpod que ligam `CombatEngine` à camada Flame em `lib/presentation/providers/combat_providers.dart`
-- [ ] T055 [US1] Implementar a tela de combate com HUD de ouro, XP, wave e formação em `lib/presentation/screens/combat_screen.dart`
-- [ ] T056 [US1] Ligar `CombatTickResult.defeats` à concessão de ouro e XP e ao auto-save em `lib/presentation/providers/combat_providers.dart`
+- [x] T039 [P] [US1] Implementar `HeroClassDefinition` e `SkillDefinition` com carregamento do asset em `lib/domain/entities/hero_class_definition.dart`
+- [x] T040 [P] [US1] Popular `assets/content/hero_classes.json` com as 6 classes de [M02](mechanics/M02-classes-de-herois.md) — papel, atributos principais, regra de alvo, atributos base, crescimento por nível e habilidades com nível de desbloqueio
+- [x] T041 [P] [US1] Implementar `Monster` e derivação de atributos a partir de `MonsterTemplate` em `lib/domain/entities/monster.dart`
+- [x] T042 [P] [US1] Popular `assets/content/monsters.json` com os templates dos 3 atos e os bosses, incluindo `possibleRarities`, `dropChanceModifier` e `isBoss`
+- [x] T043 [US1] Implementar `CombatEngine.resolveDamage` — `ATK + bônus − DEF` saturado em 1, crítico 2× (R-M01-03 a 05) em `lib/domain/engines/combat_engine.dart`
+- [x] T044 [US1] Implementar seleção de alvo por `nearest` e `lowestHp`, com troca de alvo após morte, em `lib/domain/engines/targeting.dart`
+- [x] T045 [US1] Implementar `CombatEngine.tick` em passo fixo retornando `CombatTickResult` conforme [contracts/domain-services.md](contracts/domain-services.md)
+- [x] T046 [US1] Implementar incapacitação e revive automático de 30 s, sem estado de derrota permanente (R-M01-06, CEN-M01-010) em `lib/domain/engines/combat_engine.dart`
+- [x] T047 [US1] Implementar `CombatEngine.timeToClearWave` — mesma função de dano do tick, exigida por US4 (`research.md` R3)
+- [x] T048 [P] [US1] Implementar as 6 mecânicas únicas de classe (provocação, área elemental, penetração de DEF, cura + buff, sangramento, escala com HP) em `lib/domain/engines/class_mechanics.dart`
+- [x] T049 [US1] Implementar `ProgressionService.grantHeroXp` com resolução de múltiplos níveis em uma chamada (CEN-M03-E01) em `lib/domain/progression/progression_service.dart`
+- [x] T050 [US1] Implementar nível de conta, concessão de pontos de runa e `recordProgress` monotônico (V-PA-03) em `lib/domain/progression/progression_service.dart`
+- [x] T051 [US1] Implementar `evaluateFourthSlot` com os três resultados `NoChange`, `Granted` e `AlreadyOwnedCompensated` creditando 500 gemas (CEN-M03-011 a 013, V-ENT-05) em `lib/domain/progression/formation_slots.dart`
+- [x] T052 [P] [US1] Implementar `HeroComponent` e `MonsterComponent` com animações idle, ataque, hit e morte em `lib/presentation/game/components/`
+- [x] T053 [P] [US1] Implementar `DamageNumberComponent` flutuante, distinguindo dano normal, crítico e cura, em `lib/presentation/game/components/damage_number_component.dart`
+- [x] T054 [US1] Implementar os providers Riverpod que ligam `CombatEngine` à camada Flame em `lib/presentation/providers/combat_providers.dart`
+- [x] T055 [US1] Implementar a tela de combate com HUD de ouro, XP, wave e formação em `lib/presentation/screens/combat_screen.dart`
+- [x] T056 [US1] Ligar `CombatTickResult.defeats` à concessão de ouro e XP e ao auto-save em `lib/presentation/providers/combat_providers.dart`
 
 **Checkpoint**: US1 funcional e demonstrável. O jogo já é um idle jogável — este é o MVP.
 

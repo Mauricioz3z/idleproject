@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app.dart';
+import 'data/repositories/content_repository_impl.dart';
+import 'presentation/providers/combat_providers.dart';
 
 /// Nomes dos boxes Hive, conforme contracts/persistence-save-schema.md.
 ///
@@ -26,5 +29,29 @@ Future<void> main() async {
     Hive.openBox<dynamic>(Boxes.inventory),
   ]);
 
-  runApp(const ProviderScope(child: PixelIdleQuestApp()));
+  final content = JsonContentRepository.fromJson(
+    heroClassesJson: await rootBundle.loadString(
+      'assets/content/hero_classes.json',
+    ),
+    monstersJson: await rootBundle.loadString('assets/content/monsters.json'),
+    runeTreeJson: await rootBundle.loadString('assets/content/rune_tree.json'),
+    // A árvore de runas só é autorada em T123 (US6). Exigir os 200 nós agora
+    // impediria o app de abrir por uma dependência de uma story futura.
+    requireFullRuneTree: false,
+  );
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        combatDependenciesProvider.overrideWithValue(
+          CombatDependencies(
+            classes: content.heroClasses(),
+            monsterTemplates: content.monsters(),
+            seed: DateTime.now().millisecondsSinceEpoch,
+          ),
+        ),
+      ],
+      child: const PixelIdleQuestApp(),
+    ),
+  );
 }

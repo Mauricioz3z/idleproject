@@ -137,6 +137,13 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - `core/theme/` saiu de `core/` para `presentation/theme/`. Tema importa Flutter por natureza, e mantê-lo em `core/` tornava falsa a afirmação de que `lib/core/` é Dart puro — o que importa porque `lib/domain/` depende de `core/`. A regra agora é verificável, e `test/domain/architecture_test.dart` a faz falhar o build se alguém a violar. Foi esse teste que pegou o problema.
 - As definições de conteúdo (`HeroClassDefinition`, `MonsterTemplate`, `RuneNode`) foram criadas na Fase 2, não em US1 como as tarefas previam: `ContentRepository` (T023, foundational) não compila sem elas. As tarefas T039 e T041 ficam reduzidas ao que sobra — habilidades e derivação de atributos.
 
+**Correções descobertas na implementação de US1:**
+
+- **O piso de 1 de dano é assimétrico.** R-M01-03 fixa dano mínimo de 1, e a primeira implementação aplicou isso nos dois sentidos. O efeito era um herói de nível alto ser lentamente morto por monstros triviais do Ato 1, por mais defesa que acumulasse — o oposto do que a progressão de equipamento deveria comprar. O piso agora vale só para herói→monstro, onde existe progressão a destravar; monstro→herói pode chegar a zero. Um teste trava a regra (`herói com defesa suficiente não sofre dano`).
+- **`ContentRepository` ganhou `requireFullRuneTree`.** A validação de ≥200 nós roda no boot, mas a árvore só é autorada em T123 (US6). Sem o parâmetro, o app não abriria durante toda US1–US5 por causa de uma dependência de conteúdo de US6. Adjacência e alcançabilidade continuam validadas sempre.
+- **Desugaring obrigatório no Android.** `flutter_local_notifications` 22 usa APIs de `java.time` inexistentes no minSdk 24 e exige `isCoreLibraryDesugaringEnabled` mais `desugar_jdk_libs`. Sem isso o APK **não compila** — não é degradação de notificações, é falha de build.
+- **`CombatController._spawnFor` é provisório.** Gera waves com escalonamento fixo; `WaveDirector` (T076, US3) assume a responsabilidade com escalonamento por wave e dificuldade.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

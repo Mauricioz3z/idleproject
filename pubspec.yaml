@@ -53,6 +53,7 @@ dependencies:
 # TypeAdapter gerado não traria ganho — a serialização é manual em
 # lib/data/dto/save_codec.dart, o que também simplifica as migrações.
 dev_dependencies:
+  fake_async: ^1.3.3
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter

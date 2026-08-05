@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:hive/hive.dart';
 import 'package:pixel_idle_quest/core/constants/game_enums.dart';
 import 'package:pixel_idle_quest/core/numeric/game_number.dart';
@@ -87,19 +88,49 @@ void main() {
   }
 
   group('CEN-M10-001/002 — cadência de gravação', () {
-    test('CEN-M10-001: auto-save dispara ao completar o intervalo', () async {
+    test('CEN-M10-001: auto-save dispara a cada 30 s', () {
+      // Tempo simulado, não relógio de parede: cravar o intervalo com
+      // Future.delayed torna o teste dependente da carga da máquina, e ele
+      // falha de forma intermitente — pior do que não existir.
+      final gravacoes = _RecordingRepository();
       final clock = FakeClock(start: now);
-      final scheduler = SaveScheduler(
-        repository: repo,
-        clock: clock,
-        snapshot: richState,
-        interval: const Duration(milliseconds: 30),
-      )..start();
 
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      scheduler.stop();
+      FakeAsync().run((async) {
+        SaveScheduler(
+          repository: gravacoes,
+          clock: clock,
+          snapshot: richState,
+        ).start();
 
-      expect(await repo.load(), isNotNull);
+        async.elapse(const Duration(seconds: 29));
+        expect(gravacoes.count, 0, reason: 'não deve salvar antes de 30 s');
+
+        async.elapse(const Duration(seconds: 1));
+        expect(gravacoes.count, 1);
+
+        async.elapse(const Duration(seconds: 60));
+        expect(gravacoes.count, 3, reason: 'uma gravação a cada 30 s');
+      });
+    });
+
+    test('parar o agendador interrompe as gravações', () {
+      final gravacoes = _RecordingRepository();
+      final clock = FakeClock(start: now);
+
+      FakeAsync().run((async) {
+        final scheduler = SaveScheduler(
+          repository: gravacoes,
+          clock: clock,
+          snapshot: richState,
+        )..start();
+
+        async.elapse(const Duration(seconds: 30));
+        expect(gravacoes.count, 1);
+
+        scheduler.stop();
+        async.elapse(const Duration(minutes: 5));
+        expect(gravacoes.count, 1, reason: 'nada após stop()');
+      });
     });
 
     test('CEN-M10-002: onAppPause grava imediatamente', () async {
@@ -260,6 +291,27 @@ void main() {
       expect(reported.toString(), contains('No space'));
     });
   });
+}
+
+/// Repositório em memória que conta gravações, para testar a cadência sem I/O.
+class _RecordingRepository implements SaveRepository {
+  int count = 0;
+  SaveState? last;
+
+  @override
+  Future<void> clear() async {
+    last = null;
+    count = 0;
+  }
+
+  @override
+  Future<SaveState?> load() async => last;
+
+  @override
+  Future<void> save(SaveState state) async {
+    count++;
+    last = state;
+  }
 }
 
 /// Repositório que sempre falha por disco cheio.

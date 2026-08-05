@@ -1,1 +1,134 @@
-[]
+[
+  {
+    "id": "vanguard",
+    "displayName": "Vanguard",
+    "role": "tank",
+    "primaryStats": ["vit", "defense"],
+    "targetingRule": "nearest",
+    "mechanic": "taunt",
+    "attacksPerSecond": 0.8,
+    "baseStats": {
+      "str": 12, "dex": 6, "int": 4, "vit": 16, "agi": 6,
+      "attack": 55, "defense": 45, "maxHp": 1200
+    },
+    "statGrowthPerLevel": {
+      "str": 2, "dex": 1, "int": 0.5, "vit": 3, "agi": 1,
+      "attack": 7, "defense": 6, "maxHp": 140
+    },
+    "skills": [
+      { "id": "taunt", "displayName": "Provocar", "unlockLevel": 1 },
+      { "id": "aoe_reduction", "displayName": "Anteparo", "unlockLevel": 5 },
+      { "id": "iron_stance", "displayName": "Postura de Ferro", "unlockLevel": 12 }
+    ]
+  },
+  {
+    "id": "elementalist",
+    "displayName": "Elementalist",
+    "role": "magicDamage",
+    "primaryStats": ["int"],
+    "targetingRule": "nearest",
+    "mechanic": "areaElemental",
+    "attacksPerSecond": 0.9,
+    "baseStats": {
+      "str": 4, "dex": 7, "int": 18, "vit": 7, "agi": 8,
+      "attack": 115, "defense": 12, "maxHp": 460
+    },
+    "statGrowthPerLevel": {
+      "str": 0.5, "dex": 1, "int": 3.5, "vit": 1, "agi": 1,
+      "attack": 15, "defense": 1.5, "maxHp": 48
+    },
+    "skills": [
+      { "id": "ember_burst", "displayName": "Estilhaço Ígneo", "unlockLevel": 1 },
+      { "id": "frost_chain", "displayName": "Corrente Glacial", "unlockLevel": 6 },
+      { "id": "storm_call", "displayName": "Chamado da Tempestade", "unlockLevel": 14 }
+    ]
+  },
+  {
+    "id": "sharpshooter",
+    "displayName": "Sharpshooter",
+    "role": "rangedDamage",
+    "primaryStats": ["dex"],
+    "targetingRule": "lowestHp",
+    "mechanic": "defensePenetration",
+    "attacksPerSecond": 1.1,
+    "baseStats": {
+      "str": 7, "dex": 18, "int": 6, "vit": 8, "agi": 12,
+      "attack": 105, "defense": 14, "maxHp": 520
+    },
+    "statGrowthPerLevel": {
+      "str": 1, "dex": 3.5, "int": 0.5, "vit": 1.5, "agi": 2,
+      "attack": 13, "defense": 2, "maxHp": 55
+    },
+    "skills": [
+      { "id": "pierce_shot", "displayName": "Tiro Perfurante", "unlockLevel": 1 },
+      { "id": "keen_eye", "displayName": "Olho Aguçado", "unlockLevel": 7 },
+      { "id": "headhunter", "displayName": "Caçador de Cabeças", "unlockLevel": 15 }
+    ]
+  },
+  {
+    "id": "medtech",
+    "displayName": "Medtech",
+    "role": "support",
+    "primaryStats": ["int", "vit"],
+    "targetingRule": "lowestHp",
+    "mechanic": "healAndHaste",
+    "attacksPerSecond": 1.0,
+    "baseStats": {
+      "str": 5, "dex": 8, "int": 14, "vit": 13, "agi": 9,
+      "attack": 60, "defense": 20, "maxHp": 700
+    },
+    "statGrowthPerLevel": {
+      "str": 0.5, "dex": 1, "int": 2.5, "vit": 2.5, "agi": 1,
+      "attack": 7, "defense": 2.5, "maxHp": 80
+    },
+    "skills": [
+      { "id": "field_patch", "displayName": "Remendo de Campo", "unlockLevel": 1 },
+      { "id": "combat_stim", "displayName": "Estimulante", "unlockLevel": 5 },
+      { "id": "triage", "displayName": "Triagem", "unlockLevel": 13 }
+    ]
+  },
+  {
+    "id": "tracker",
+    "displayName": "Tracker",
+    "role": "meleeDamage",
+    "primaryStats": ["agi"],
+    "targetingRule": "nearest",
+    "mechanic": "bleed",
+    "attacksPerSecond": 1.8,
+    "baseStats": {
+      "str": 10, "dex": 12, "int": 5, "vit": 9, "agi": 17,
+      "attack": 78, "defense": 16, "maxHp": 600
+    },
+    "statGrowthPerLevel": {
+      "str": 1.5, "dex": 2, "int": 0.5, "vit": 1.5, "agi": 3.5,
+      "attack": 9, "defense": 2, "maxHp": 65
+    },
+    "skills": [
+      { "id": "rend", "displayName": "Dilacerar", "unlockLevel": 1 },
+      { "id": "hunters_mark", "displayName": "Marca do Caçador", "unlockLevel": 6 },
+      { "id": "frenzy", "displayName": "Frenesi", "unlockLevel": 14 }
+    ]
+  },
+  {
+    "id": "berserker",
+    "displayName": "Berserker",
+    "role": "brute",
+    "primaryStats": ["str"],
+    "targetingRule": "nearest",
+    "mechanic": "rageOnLowHp",
+    "attacksPerSecond": 0.95,
+    "baseStats": {
+      "str": 19, "dex": 8, "int": 3, "vit": 11, "agi": 7,
+      "attack": 128, "defense": 15, "maxHp": 780
+    },
+    "statGrowthPerLevel": {
+      "str": 3.5, "dex": 1, "int": 0.5, "vit": 2, "agi": 1,
+      "attack": 17, "defense": 2, "maxHp": 85
+    },
+    "skills": [
+      { "id": "reckless_swing", "displayName": "Golpe Insano", "unlockLevel": 1 },
+      { "id": "blood_rage", "displayName": "Fúria Sangrenta", "unlockLevel": 5 },
+      { "id": "last_stand", "displayName": "Último Suspiro", "unlockLevel": 16 }
+    ]
+  }
+]

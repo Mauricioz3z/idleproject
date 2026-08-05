@@ -29,6 +29,7 @@ class HeroClassDefinition {
     required this.baseStats,
     required this.statGrowthPerLevel,
     required this.skills,
+    this.attacksPerSecond = 1.0,
   });
 
   final String id;
@@ -47,6 +48,10 @@ class HeroClassDefinition {
   final Stats baseStats;
   final Stats statGrowthPerLevel;
   final List<SkillDefinition> skills;
+
+  /// Cadência de ataque base. O Tracker ataca mais rápido (M02), o Vanguard
+  /// mais devagar. Modificada por sufixos de item e pelo buff do Medtech.
+  final double attacksPerSecond;
 
   /// Habilidades desbloqueadas até o nível dado.
   List<SkillDefinition> skillsUpTo(int level) =>

@@ -28,10 +28,15 @@ class JsonContentRepository implements ContentRepository {
   ///
   /// Lança [ContentValidationException] com **todos** os problemas de uma vez,
   /// em vez de um por execução.
+  /// [requireFullRuneTree] permite carregar conteúdo antes de a árvore de runas
+  /// estar autorada (T123, US6). A validação de adjacência e alcançabilidade
+  /// continua valendo em qualquer caso — só o mínimo de 200 nós é dispensado,
+  /// porque exigi-lo bloquearia US1 por uma dependência de US6.
   factory JsonContentRepository.fromJson({
     required String heroClassesJson,
     required String monstersJson,
     required String runeTreeJson,
+    bool requireFullRuneTree = true,
   }) {
     final problems = <String>[];
 
@@ -39,7 +44,7 @@ class JsonContentRepository implements ContentRepository {
     final monsters = _parseMonsters(monstersJson, problems);
     final runeTree = _parseRuneTree(runeTreeJson, problems);
 
-    if (!runeTree.hasMinimumNodes) {
+    if (requireFullRuneTree && !runeTree.hasMinimumNodes) {
       problems.add(
         'V-RN-01: árvore de runas tem ${runeTree.nodes.length} nós, '
         'mínimo é ${RuneTreeDefinition.minimumNodes}',
@@ -139,6 +144,8 @@ class JsonContentRepository implements ContentRepository {
             (raw['statGrowthPerLevel'] as Map?)?.cast<String, dynamic>() ??
                 const {},
           ),
+          attacksPerSecond:
+              (raw['attacksPerSecond'] as num?)?.toDouble() ?? 1.0,
           skills: [
             for (final s in (raw['skills'] as List?) ?? const [])
               SkillDefinition(
