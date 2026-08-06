@@ -154,6 +154,9 @@ abstract final class SaveCodec {
     },
     'rngSeed': a.rngSeed,
     'rngCounter': a.rngCounter,
+    // Acrescentado em US4. Save anterior sem a chave decodifica como zero, que
+    // é o comportamento correto: sem taxa apurada, não há ouro offline.
+    'goldPerSecond': encodeNumber(a.goldPerSecond),
   };
 
   static PlayerAccount decodeAccount(
@@ -194,6 +197,7 @@ abstract final class SaveCodec {
       lastSaveAt: lastSaveAt,
       rngSeed: (raw['rngSeed'] as num?)?.toInt() ?? 0,
       rngCounter: (raw['rngCounter'] as num?)?.toInt() ?? 0,
+      goldPerSecond: decodeNumber(raw['goldPerSecond']),
     );
   }
 

@@ -5,10 +5,12 @@ import '../../domain/entities/progress_position.dart';
 import '../game/combat_arena.dart';
 import '../providers/combat_providers.dart';
 import '../providers/loot_providers.dart';
+import '../providers/offline_providers.dart';
 import '../widgets/progress_hud.dart';
 import 'act_select_screen.dart';
 import 'hero_detail_screen.dart';
 import 'inventory_screen.dart';
+import 'offline_summary_screen.dart';
 
 /// Tela de combate — a tela principal do jogo.
 ///
@@ -29,7 +31,13 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
   void initState() {
     super.initState();
     _arena = CombatArena(
-      onFixedStep: (dt) => ref.read(combatControllerProvider.notifier).tick(dt),
+      onFixedStep: (dt) {
+        // CEN-M09-005: com resumo offline pendente, o combate não anda. O
+        // acumulador da arena continua correndo, mas o passo é descartado —
+        // o jogador não perde nem ganha nada enquanto lê o resumo.
+        if (ref.read(offlineControllerProvider).blocksCombat) return;
+        ref.read(combatControllerProvider.notifier).tick(dt);
+      },
     );
   }
 
@@ -37,6 +45,12 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
   Widget build(BuildContext context) {
     final session = ref.watch(combatControllerProvider);
     final loot = ref.watch(lootControllerProvider);
+    final offline = ref.watch(offlineControllerProvider);
+
+    // O resumo cobre a tela inteira até ser dispensado.
+    if (offline.report case final report?) {
+      return OfflineSummaryScreen(report: report);
+    }
 
     // Empurra o estado mais recente para a arena a cada rebuild.
     _arena.sync(session.combat, session.lastEvents);

@@ -51,7 +51,8 @@ Regra: `m` em `[1,10)` ou exatamente `0`; `e == 0` quando `m == 0`. Um leitor qu
     "fourthSlotSource": "none",
     "highestWave": 143, "highestAct": 2, "highestDifficulty": 1,
     "currentPosition": { "difficulty": 1, "act": 2, "wave": 43 },
-    "rngSeed": 8412739481273, "rngCounter": 918273
+    "rngSeed": 8412739481273, "rngCounter": 918273,
+    "goldPerSecond": { "m": 4.7, "e": 3 }
   },
   "entitlements": {
     "adsRemoved": false,
@@ -122,6 +123,8 @@ Consequência para CEN-M10-E03 (duas instâncias): a promoção é a seção cr�
 - Migrações são funções encadeadas `v(n) → v(n+1)` em `lib/data/migrations/`, aplicadas na ordem, cada uma com teste próprio.
 - Migração nunca destrói dados que não sabe interpretar: campo desconhecido é preservado.
 - Save com `schemaVersion` **maior** que o suportado (downgrade do app) não é aberto nem sobrescrito; o jogador é avisado. Sobrescrever aqui destrói o progresso de quem tem duas instalações.
+
+**Campos acrescentados sem subir a versão**: um campo **novo e opcional**, cuja ausência tem um default correto, não é mudança incompatível e não exige migração. Foi o caso de `goldPerSecond` (US4): save gravado antes dele decodifica como zero, e zero é a resposta certa — sem taxa apurada não há ouro offline (R-M09-03). A regra vale só nesta direção: remover, renomear ou mudar o significado de um campo existente continua exigindo `v(n) → v(n+1)`.
 
 ## O que nunca é persistido
 

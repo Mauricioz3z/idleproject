@@ -162,6 +162,15 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **A wave ganhou fluxo de RNG próprio (`fork('waves')`).** Sem isso, mudar a quantidade de monstros por wave deslocaria o sorteio de crítico e o de loot.
 - **`spawnWave` deriva o `instanceId` da posição.** Um contador de instância global tornava a composição da wave dependente de quantas waves a sessão já tinha visto — o offline (M09) e o combate ao vivo produziriam IDs diferentes para a mesma wave.
 
+**Correções descobertas na implementação de US4:**
+
+- **`timeToClearWave` estava errada por até 6× e foi reescrita.** Duas omissões, ambas descobertas comparando a simulação com o combate real wave a wave. (1) Dividir HP total por DPS ignora o **excedente de dano**: quando o time mata cada monstro em um golpe — o caso normal de quem farma um ato antigo — o modelo estimava a wave três vezes mais rápida do que ela é. Agora conta golpes por monstro. (2) Ignorava o **tempo de revive**: numa wave de boss, o alvo cai em segundos e os 30 s de R-M01-06 dominam a luta; a estimativa dizia 24 s onde o combate real levava 139 s. Agora conta quantas vezes o alvo cai durante a wave. Depois das duas correções, 1 h simulada compra 236 waves contra 274 do jogo aberto — conservador, que é o lado certo de errar num modo já penalizado em 20%.
+- **`goldPerSecond` entrou em `PlayerAccount` e no schema de save.** O contrato de persistência não previa o campo, mas R-M09-03 é uma fórmula sobre ele. Save antigo sem a chave decodifica como zero, que é o comportamento correto: sem taxa apurada, não há ouro offline. `contracts/persistence-save-schema.md` foi atualizado.
+- **`simulate` devolve `OfflineSimulation`, não `OfflineReport`.** O contrato previa só o relatório, mas alguém precisa adotar o estado resultante. Mantê-los separados preserva o que data-model.md diz do `OfflineReport`: objeto de exibição, descartado depois de visto — e não uma segunda fonte de verdade sobre o progresso.
+- **O ouro da venda automática offline é creditado e reportado à parte.** Somá-lo a `goldGained` tornaria a fórmula de R-M09-03 impossível de conferir; descartá-lo puniria o jogador por ter enchido o inventário enquanto estava fora.
+- **A persistência foi ligada ao app.** `SaveScheduler` existia desde a Fase 2 mas nada o chamava: `main.dart` agora carrega o save, semeia o RNG a partir dele — sem isso reabrir o app re-sortearia todo o loot — e grava em `onAppPause`. `CombatController` ganhou `restore` e `snapshot`, e `snapshot` sem `now` preserva o `lastSaveAt`, porque a retomada mede a ausência **a partir** dele.
+- **`ClockGuard` trata reinício de processo como caso normal.** O contador monotônico zera com o processo, e é justamente na reabertura que a simulação roda; cruzar os dois relógios ali produziria falso positivo em toda abertura do app.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

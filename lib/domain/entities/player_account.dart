@@ -21,6 +21,7 @@ class PlayerAccount {
     required this.lastSaveAt,
     required this.rngSeed,
     required this.rngCounter,
+    this.goldPerSecond = GameNumber.zero,
   }) : unlockedRuneNodeIds = Set.unmodifiable(unlockedRuneNodeIds) {
     assert(
       formationSlots == baseFormationSlots ||
@@ -89,6 +90,15 @@ class PlayerAccount {
   final ProgressPosition currentPosition;
   final DateTime lastSaveAt;
 
+  /// Ouro por segundo apurado no momento do último save (M09, suposição
+  /// declarada).
+  ///
+  /// É a única entrada do cálculo offline de ouro, que é forma fechada
+  /// (R-M09-03). Persistir a taxa, e não recalculá-la na volta, é o que permite
+  /// resolver 8 h em uma multiplicação — e o que faz o ganho refletir o
+  /// desempenho real do jogador, não o poder teórico da formação.
+  final GameNumber goldPerSecond;
+
   final int rngSeed;
   final int rngCounter;
 
@@ -122,6 +132,7 @@ class PlayerAccount {
     DateTime? lastSaveAt,
     int? rngSeed,
     int? rngCounter,
+    GameNumber? goldPerSecond,
   }) => PlayerAccount(
     accountLevel: accountLevel ?? this.accountLevel,
     accountXp: accountXp ?? this.accountXp,
@@ -139,5 +150,6 @@ class PlayerAccount {
     lastSaveAt: lastSaveAt ?? this.lastSaveAt,
     rngSeed: rngSeed ?? this.rngSeed,
     rngCounter: rngCounter ?? this.rngCounter,
+    goldPerSecond: goldPerSecond ?? this.goldPerSecond,
   );
 }

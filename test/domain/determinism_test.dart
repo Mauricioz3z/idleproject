@@ -1,9 +1,18 @@
+import 'package:pixel_idle_quest/core/numeric/game_number.dart';
 import 'package:pixel_idle_quest/core/rng/rng_stream.dart';
 import 'package:pixel_idle_quest/domain/engines/combat_engine.dart';
 import 'package:pixel_idle_quest/domain/engines/loot_generator.dart';
+import 'package:pixel_idle_quest/domain/engines/offline_simulator.dart';
+import 'package:pixel_idle_quest/domain/engines/wave_director.dart';
+import 'package:pixel_idle_quest/domain/entities/entitlements.dart';
 import 'package:pixel_idle_quest/domain/entities/game_item.dart';
+import 'package:pixel_idle_quest/domain/entities/hero.dart';
+import 'package:pixel_idle_quest/domain/entities/inventory.dart';
 import 'package:pixel_idle_quest/domain/entities/monster.dart';
+import 'package:pixel_idle_quest/domain/entities/player_account.dart';
 import 'package:pixel_idle_quest/domain/entities/progress_position.dart';
+import 'package:pixel_idle_quest/domain/entities/save_state.dart';
+import 'package:pixel_idle_quest/domain/progression/progression_service.dart';
 import 'package:test/test.dart';
 
 import '../support/test_content.dart';
@@ -183,6 +192,197 @@ void main() {
 
       expect(essenceRun(4242), essenceRun(4242));
       expect(essenceRun(4242).whereType<String>(), isNotEmpty);
+    });
+  });
+
+  // T086 — equivalência entre combate ao vivo e simulação offline.
+  //
+  // "Equivalente" aqui não é "idêntico", e a diferença é da própria spec: o
+  // ouro offline é forma fechada com penalidade de 20% (R-M09-03/04) e
+  // SC-M09-02 **exige** que a hora offline valha menos que a ativa. O que
+  // precisa coincidir é o resto: quantas waves o mesmo poder derruba no mesmo
+  // intervalo, e por quais regras o loot é gerado. Se essas divergirem, o
+  // jogador recebe resultados diferentes por ter fechado o app — a classe de
+  // bug que a arquitetura de plan.md existe para impedir (research.md R3).
+  group('determinism: online ≡ offline', () {
+    const simulator = OfflineSimulator();
+    final salvoEm = DateTime.utc(2026, 8, 5, 12);
+    const umaHora = Duration(hours: 1);
+
+    final classe = TestContent.heroClass(
+      id: 'herói',
+      attack: 500,
+      defense: 40,
+      maxHp: 3000,
+      attacksPerSecond: 2,
+    );
+
+    // Os três atos precisam existir: com só um, a simulação offline pararia na
+    // virada de ato enquanto o combate ao vivo giraria em waves vazias, e a
+    // comparação mediria a lacuna do conteúdo em vez das duas fórmulas.
+    final director = WaveDirector(
+      templates: [
+        for (var act = 1; act <= 3; act++) ...[
+          TestContent.monster(
+            id: 'comum$act',
+            act: act,
+            maxHp: 150.0 * act,
+            attack: 12.0 * act,
+          ),
+          TestContent.monster(
+            id: 'boss$act',
+            act: act,
+            isBoss: true,
+            maxHp: 700.0 * act,
+            attack: 25.0 * act,
+          ),
+        ],
+      ],
+    );
+
+    SaveState save({double goldPerSecond = 40}) => SaveState(
+      schemaVersion: SaveState.currentSchemaVersion,
+      account: PlayerAccount.fresh(now: salvoEm, seed: 5150).copyWith(
+        goldPerSecond: GameNumber.fromDouble(goldPerSecond),
+        lastSaveAt: salvoEm,
+      ),
+      entitlements: Entitlements.initial(),
+      heroes: [
+        Hero.fresh(id: 'h1', classId: classe.id).copyWith(formationIndex: 0),
+      ],
+      equippedItems: const [],
+      inventory: Inventory.empty(),
+      lastMonotonicMillis: 0,
+    );
+
+    /// Joga [seconds] segundos de combate real, no mesmo passo fixo do jogo.
+    ({int waves, GameNumber gold, GameNumber xp}) playOnline(double seconds) {
+      final engine = CombatEngine(rng: RngStream(seed: 5150));
+      final waveRng = RngStream(seed: 5150).fork('waves');
+      final progression = ProgressionService();
+
+      var account = save().account;
+      var hero = save().heroes.single;
+      var wavesCleared = 0;
+      var gold = GameNumber.zero;
+      var xp = GameNumber.zero;
+
+      CombatState startWave(ProgressPosition p) => CombatState.start(
+        position: p,
+        heroes: [
+          HeroCombatant.fresh(
+            heroId: hero.id,
+            definition: classe,
+            stats: progression.statsForLevel(classe, hero.level),
+          ),
+        ],
+        monsters: director.spawnWave(p, waveRng),
+      );
+
+      var state = startWave(account.currentPosition);
+      const step = 1 / 30;
+      final steps = (seconds / step).round();
+
+      for (var i = 0; i < steps; i++) {
+        final result = engine.tick(state, step);
+        for (final d in result.defeats) {
+          gold = gold + d.goldAwarded;
+          xp = xp + d.xpAwarded;
+        }
+        if (result.waveCleared) {
+          wavesCleared++;
+          final advance = director.advance(account.currentPosition, account);
+          account = WaveDirector.applyAdvance(account, advance);
+          hero = progression.grantHeroXp(hero, GameNumber.zero, classe).hero;
+          state = startWave(advance.position);
+        } else {
+          state = result.state;
+        }
+      }
+
+      return (waves: wavesCleared, gold: gold, xp: xp);
+    }
+
+    test(
+      '1 h simulada avança aproximadamente as mesmas waves que 1 h jogada',
+      () {
+        final online = playOnline(umaHora.inSeconds.toDouble());
+        final offline = simulator.simulate(
+          state: save(),
+          now: salvoEm.add(umaHora),
+          combat: CombatEngine(rng: RngStream(seed: 5150)),
+          waves: director,
+          classes: [classe],
+        );
+
+        expect(online.waves, greaterThan(0), reason: 'amostra vazia');
+        expect(
+          offline.report.wavesAdvanced,
+          closeTo(online.waves, online.waves * 0.25 + 1),
+          reason:
+              'offline avançou ${offline.report.wavesAdvanced} waves contra '
+              '${online.waves} ao vivo — as duas usam a mesma função de dano, '
+              'então um desvio grande significa que uma delas mudou de fórmula',
+        );
+      },
+    );
+
+    test('SC-M09-02: a mesma hora rende menos offline que ao vivo', () {
+      final online = playOnline(umaHora.inSeconds.toDouble());
+      // A taxa apurada no jogo ativo é o que o save guardaria.
+      final gps = online.gold.toDouble() / umaHora.inSeconds;
+
+      final offline = simulator.simulate(
+        state: save(goldPerSecond: gps),
+        now: salvoEm.add(umaHora),
+        combat: CombatEngine(rng: RngStream(seed: 5150)),
+        waves: director,
+        classes: [classe],
+      );
+
+      expect(offline.report.goldGained < online.gold, isTrue);
+      expect(
+        offline.report.goldGained.toDouble(),
+        closeTo(online.gold.toDouble() * OfflineSimulator.offlinePenalty, 1),
+      );
+    });
+
+    test('o XP offline fica na mesma ordem de grandeza do XP ao vivo', () {
+      final online = playOnline(umaHora.inSeconds.toDouble());
+      final offline = simulator.simulate(
+        state: save(),
+        now: salvoEm.add(umaHora),
+        combat: CombatEngine(rng: RngStream(seed: 5150)),
+        waves: director,
+        classes: [classe],
+      );
+
+      final razao = offline.report.xpGained.toDouble() / online.xp.toDouble();
+      expect(razao, greaterThan(0.5));
+      expect(razao, lessThan(2.0));
+    });
+
+    test('o loot offline sai do mesmo gerador e obedece às mesmas regras', () {
+      final offline = simulator.simulate(
+        state: save(),
+        now: salvoEm.add(const Duration(hours: 8)),
+        combat: CombatEngine(rng: RngStream(seed: 5150)),
+        waves: director,
+        classes: [classe],
+      );
+
+      for (final item in offline.report.itemsObtained) {
+        expect(item.affixes.length, inInclusiveRange(0, 3));
+        expect(
+          item.affixes.map((a) => a.affixType).toSet().length,
+          item.affixes.length,
+        );
+        expect(item.itemLevel, greaterThan(0));
+      }
+      expect(
+        offline.state.inventory.items.length,
+        lessThanOrEqualTo(Inventory.capacity),
+      );
     });
   });
 }

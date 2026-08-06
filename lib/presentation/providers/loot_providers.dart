@@ -220,6 +220,22 @@ class LootController extends Notifier<LootState> {
     _publish(_inventory.toggleFavorite(item, state.inventory));
   }
 
+  /// Adota o inventário de um save carregado ou de uma simulação offline.
+  ///
+  /// Semear o catálogo de equipados é obrigatório: sem isso, o primeiro item
+  /// substituído depois de reabrir o app se perderia, porque o herói guarda
+  /// apenas o ID e ninguém saberia resolver o objeto.
+  void restore(Inventory inventory, List<GameItem> equipped) {
+    _inventory.registerEquipped(equipped);
+    state = LootState.initial().copyWith(
+      inventory: inventory,
+      inventoryFull: inventory.hasPending,
+    );
+  }
+
+  /// Todos os itens equipados conhecidos, para gravar no save.
+  List<GameItem> get allEquippedItems => _inventory.equippedItems.toList();
+
   /// Itens equipados de um herói, resolvidos pelo catálogo.
   List<GameItem> equippedOf(Hero hero) => [
     for (final id in hero.equippedItemIds)

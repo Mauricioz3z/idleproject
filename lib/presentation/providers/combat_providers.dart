@@ -5,6 +5,7 @@ import '../../core/numeric/game_number.dart';
 import '../../core/rng/rng_stream.dart';
 import '../../domain/engines/combat_engine.dart';
 import '../../domain/engines/wave_director.dart';
+import '../../domain/entities/entitlements.dart';
 import '../../domain/entities/game_item.dart';
 import '../../domain/entities/hero.dart';
 import '../../domain/entities/hero_class_definition.dart';
@@ -12,7 +13,9 @@ import '../../domain/entities/hero_stats_resolver.dart';
 import '../../domain/entities/monster.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
+import '../../domain/entities/save_state.dart';
 import '../../domain/progression/formation_slots.dart';
+import '../../domain/progression/gold_rate_tracker.dart';
 import '../../domain/progression/progression_service.dart';
 import 'game_dependencies.dart';
 import 'loot_providers.dart';
@@ -65,6 +68,10 @@ class CombatController extends Notifier<CombatSession> {
   late final RngStream _waveRng;
   late final CombatDependencies _deps;
 
+  /// Apura a taxa de ouro do jogo ativo, que é o que a simulação offline
+  /// consome depois (M09).
+  final GoldRateTracker _goldRate = GoldRateTracker();
+
   @override
   CombatSession build() {
     _deps = ref.watch(combatDependenciesProvider);
@@ -97,12 +104,17 @@ class CombatController extends Notifier<CombatSession> {
     var account = state.account;
     var heroes = state.heroes;
 
+    // A taxa é medida a cada passo, com ouro ou sem ele: os segundos em que
+    // nada caiu também contam, senão a taxa mediria o pico e não o ritmo.
+    var goldThisTick = GameNumber.zero;
+
     if (result.defeats.isNotEmpty) {
       var gold = account.gold;
       var xpTotal = GameNumber.zero;
       for (final d in result.defeats) {
         gold = gold + d.goldAwarded;
         xpTotal = xpTotal + d.xpAwarded;
+        goldThisTick = goldThisTick + d.goldAwarded;
       }
 
       // T069: as mesmas derrotas que pagam ouro e XP avaliam o drop. Um único
@@ -113,11 +125,15 @@ class CombatController extends Notifier<CombatSession> {
         now: DateTime.now(),
       );
       gold = gold + loot.goldFromAutoSell;
+      goldThisTick = goldThisTick + loot.goldFromAutoSell;
 
       account = account.copyWith(gold: gold);
       heroes = _grantXp(heroes, xpTotal);
       _deps.onProgressChanged?.call();
     }
+
+    _goldRate.record(goldThisTick, fixedDt);
+    account = account.copyWith(goldPerSecond: _goldRate.ratePerSecond);
 
     if (result.waveCleared) {
       // T078: quem decide se a wave concluída leva à seguinte, ao ato seguinte
@@ -216,6 +232,51 @@ class CombatController extends Notifier<CombatSession> {
     if (result is! SlotNoChange) {
       state = state.copyWith(account: result.account);
     }
+  }
+
+  /// Adota um estado carregado do disco ou devolvido pela simulação offline.
+  ///
+  /// A wave recomeça do início: estado de combate parcial nunca é persistido
+  /// (V-PP-03, CEN-M08-E03, CEN-M10-E01).
+  void restore(SaveState saved) {
+    ref
+        .read(lootControllerProvider.notifier)
+        .restore(saved.inventory, saved.equippedItems);
+
+    state = CombatSession(
+      combat: _startWave(saved.account.currentPosition, saved.heroes),
+      account: saved.account,
+      heroes: saved.heroes,
+      lastEvents: null,
+    );
+  }
+
+  /// Fotografia do estado persistível. É o que o auto-save de 30 s grava.
+  ///
+  /// A taxa de ouro entra aqui, e não é recalculada na volta: é a apuração
+  /// **deste** momento que a simulação offline vai consumir (M09).
+  ///
+  /// [now] omitido preserva o `lastSaveAt` atual. É o que a retomada de segundo
+  /// plano precisa: ela mede a ausência **a partir** do último save, e carimbar
+  /// o instante atual apagaria justamente o intervalo a simular.
+  SaveState snapshot({DateTime? now, int monotonicMillis = 0}) {
+    final loot = ref.read(lootControllerProvider);
+    final equipped = ref
+        .read(lootControllerProvider.notifier)
+        .allEquippedItems;
+
+    return SaveState(
+      schemaVersion: SaveState.currentSchemaVersion,
+      account: state.account.copyWith(
+        goldPerSecond: _goldRate.ratePerSecond,
+        lastSaveAt: now ?? state.account.lastSaveAt,
+      ),
+      entitlements: Entitlements.initial(),
+      heroes: state.heroes,
+      equippedItems: equipped,
+      inventory: loot.inventory,
+      lastMonotonicMillis: monotonicMillis,
+    );
   }
 
   /// Move o jogador para um ato e dificuldade já concluídos (R-M08-11,

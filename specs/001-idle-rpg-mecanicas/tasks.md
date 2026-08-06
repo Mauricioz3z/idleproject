@@ -214,21 +214,21 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T085 [P] [US4] Testes de M09 (CEN-M09-001 a 011, E01 a E04) em `test/domain/m09_offline_test.dart`
-- [ ] T086 [P] [US4] Teste de equivalência online ≡ offline — 1 h simulada produz o mesmo ouro, waves e loot que ticks equivalentes — em `test/domain/determinism_test.dart`
-- [ ] T087 [P] [US4] Teste de orçamento de desempenho: 8 h simuladas em ≤3 s no aparelho de referência de [plan.md](plan.md) (SC-M09-01) em `test/domain/m09_performance_test.dart`
+- [x] T085 [P] [US4] Testes de M09 (CEN-M09-001 a 011, E01 a E04) em `test/domain/m09_offline_test.dart`
+- [x] T086 [P] [US4] Teste de equivalência online ≡ offline — 1 h simulada produz o mesmo ouro, waves e loot que ticks equivalentes — em `test/domain/determinism_test.dart`
+- [x] T087 [P] [US4] Teste de orçamento de desempenho: 8 h simuladas em ≤3 s no aparelho de referência de [plan.md](plan.md) (SC-M09-01) em `test/domain/m09_performance_test.dart`
 
 ### Implementation for User Story 4
 
-- [ ] T088 [US4] Implementar o cálculo de intervalo com teto de 8 h e delta negativo tratado como zero (R-M09-02, CEN-M09-E01, E02) em `lib/domain/engines/offline_simulator.dart`
-- [ ] T089 [US4] Implementar o ouro por forma fechada `gps × elapsed × 0,8` em `lib/domain/engines/offline_simulator.dart`
-- [ ] T090 [US4] Implementar o avanço de waves e XP por blocos amortizados usando `CombatEngine.timeToClearWave` (`research.md` R3) em `lib/domain/engines/offline_simulator.dart`
-- [ ] T091 [US4] Implementar a geração de loot offline passando por `InventoryService.intake`, com estagnação sem morte permanente (CEN-M09-007, 011), em `lib/domain/engines/offline_simulator.dart`
-- [ ] T092 [US4] Implementar a montagem de `OfflineReport` com ouro, XP, waves, itens, lendários+ e subidas de nível em `lib/domain/entities/offline_report.dart`
-- [ ] T093 [US4] Implementar a apuração e persistência de `goldPerSecond` no momento do save em `lib/domain/progression/gold_rate_tracker.dart`
-- [ ] T094 [US4] Implementar a detecção de relógio inconsistente por contador monotônico, com registro em analytics (`research.md` R7), em `lib/services/clock_guard.dart`
-- [ ] T095 [US4] Implementar a tela de resumo offline, bloqueando o retorno ao combate até ser dispensada (CEN-M09-005), em `lib/presentation/screens/offline_summary_screen.dart`
-- [ ] T096 [US4] Ligar a simulação offline ao boot do app e ao retorno de background em `lib/presentation/providers/offline_providers.dart`
+- [x] T088 [US4] Implementar o cálculo de intervalo com teto de 8 h e delta negativo tratado como zero (R-M09-02, CEN-M09-E01, E02) em `lib/domain/engines/offline_simulator.dart`
+- [x] T089 [US4] Implementar o ouro por forma fechada `gps × elapsed × 0,8` em `lib/domain/engines/offline_simulator.dart`
+- [x] T090 [US4] Implementar o avanço de waves e XP por blocos amortizados usando `CombatEngine.timeToClearWave` (`research.md` R3) em `lib/domain/engines/offline_simulator.dart`
+- [x] T091 [US4] Implementar a geração de loot offline passando por `InventoryService.intake`, com estagnação sem morte permanente (CEN-M09-007, 011), em `lib/domain/engines/offline_simulator.dart`
+- [x] T092 [US4] Implementar a montagem de `OfflineReport` com ouro, XP, waves, itens, lendários+ e subidas de nível em `lib/domain/entities/offline_report.dart`
+- [x] T093 [US4] Implementar a apuração e persistência de `goldPerSecond` no momento do save em `lib/domain/progression/gold_rate_tracker.dart`
+- [x] T094 [US4] Implementar a detecção de relógio inconsistente por contador monotônico, com registro em analytics (`research.md` R7), em `lib/services/clock_guard.dart`
+- [x] T095 [US4] Implementar a tela de resumo offline, bloqueando o retorno ao combate até ser dispensada (CEN-M09-005), em `lib/presentation/screens/offline_summary_screen.dart`
+- [x] T096 [US4] Ligar a simulação offline ao boot do app e ao retorno de background em `lib/presentation/providers/offline_providers.dart`
 
 **Checkpoint**: O jogo passa a recompensar ausência — o diferencial do gênero idle está funcionando.
 

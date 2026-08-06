@@ -492,8 +492,8 @@ class CombatEngine {
         defeats.add(
           MonsterDefeated(
             monster: after,
-            goldAwarded: runes.applyGold(_goldFor(after)),
-            xpAwarded: runes.applyXp(_xpFor(after)),
+            goldAwarded: goldFor(after),
+            xpAwarded: xpFor(after),
           ),
         );
       }
@@ -525,38 +525,104 @@ class CombatEngine {
   ///
   /// Retorna `null` quando o time não consegue avançar — o caso de estagnação
   /// sem morte permanente de CEN-M09-011.
+  ///
+  /// Conta **golpes por monstro**, não HP total dividido por DPS. A diferença
+  /// aparece justamente na situação mais comum de um idle: quando o time já
+  /// mata cada monstro em um golpe, o excedente de dano se perde, e o modelo de
+  /// HP/DPS estimaria a wave muito mais rápida do que ela é. Um jogador
+  /// farmando um ato antigo veria o offline prometer o triplo das waves que o
+  /// jogo aberto entregaria.
   Duration? timeToClearWave(CombatState state) {
-    final heroes = state.heroes;
+    final heroes = state.heroes.where((h) => h.isActive).toList();
     if (heroes.isEmpty) return null;
 
+    final alive = state.aliveMonsters.toList();
+    if (alive.isEmpty) return Duration.zero;
+
     var dpsTotal = GameNumber.zero;
+    var attacksPerSecond = 0.0;
     for (final hero in heroes) {
       final perHit = resolveDamage(
         attackerStats: hero.stats,
-        defenderStats: state.monsters.isEmpty
-            ? Stats.zero()
-            : state.monsters.first.stats,
+        defenderStats: alive.first.stats,
         attackerClass: hero.definition,
         isCritical: false,
         attackerHpFraction: hero.hpFraction,
+        critDamageBonus: hero.bonusCritDamage,
       );
-      dpsTotal = dpsTotal + perHit.scaled(hero.definition.attacksPerSecond);
+      final rate = hero.definition.attacksPerSecond * hero.attackSpeedMultiplier;
+      dpsTotal = dpsTotal + perHit.scaled(rate);
+      attacksPerSecond += rate;
     }
-    if (dpsTotal.isZero) return null;
+    if (dpsTotal.isZero || attacksPerSecond <= 0) return null;
 
-    var totalHp = GameNumber.zero;
-    for (final m in state.aliveMonsters) {
-      totalHp = totalHp + m.currentHp;
+    // Dano médio por golpe do time, ponderado pela cadência de cada herói.
+    final averageHit = dpsTotal / GameNumber.fromDouble(attacksPerSecond);
+    if (averageHit.isZero) return null;
+
+    var hits = 0.0;
+    for (final monster in alive) {
+      final needed = (monster.currentHp / averageHit).toDouble();
+      if (!needed.isFinite) return null;
+      hits += needed <= 1 ? 1 : needed.ceilToDouble();
+      // Wave que exige golpes demais já é estagnação; não vale continuar
+      // somando para descobrir quão impossível ela é.
+      if (hits / attacksPerSecond > _stagnationSeconds) return null;
     }
-    if (totalHp.isZero) return Duration.zero;
 
-    final seconds = (totalHp / dpsTotal).toDouble();
+    final fighting = hits / attacksPerSecond;
+    final seconds = fighting + _downtimeSeconds(heroes, alive, fighting);
     if (!seconds.isFinite || seconds <= 0) return null;
-    // Acima de uma hora por wave, tratar como estagnação: o jogador precisa de
-    // equipamento melhor, não de esperar.
-    if (seconds > 3600) return null;
+    if (seconds > _stagnationSeconds) return null;
     return Duration(milliseconds: (seconds * 1000).round());
   }
+
+  /// Tempo perdido com heróis caídos durante a wave.
+  ///
+  /// Ignorar isto fazia a estimativa errar por quase 6× numa wave de boss: o
+  /// boss derruba o alvo em poucos segundos e os 30 s de revive (R-M01-06)
+  /// dominam o tempo da luta. Sem o termo, o resumo offline prometeria waves que
+  /// o jogo aberto não entregaria — a divergência que research.md R3 existe
+  /// para evitar.
+  ///
+  /// O modelo mira o herói que os monstros atacam, que é quem cai primeiro, e
+  /// conta quantas vezes ele cai ao longo de [fightingSeconds]. Uma wave que
+  /// termina antes da primeira queda não paga nada — que é o caso da esmagadora
+  /// maioria delas. Com vários heróis, a queda de um custa a fração dele na
+  /// cadência do time, porque os outros continuam batendo.
+  double _downtimeSeconds(
+    List<HeroCombatant> heroes,
+    List<Monster> alive,
+    double fightingSeconds,
+  ) {
+    final defender = heroes.firstWhere(
+      (h) => ClassMechanics.taunts(h.definition.mechanic),
+      orElse: () => heroes.first,
+    );
+
+    var incoming = GameNumber.zero;
+    for (final monster in alive) {
+      // Mesma regra do tick: sem piso de 1 do lado do monstro.
+      final damage = monster.stats.attack - defender.stats.defense;
+      if (damage.isZero) continue;
+      incoming = incoming + damage;
+    }
+    if (incoming.isZero) return 0;
+
+    final secondsToFall = (defender.currentHp / incoming).toDouble();
+    if (!secondsToFall.isFinite || secondsToFall <= 0) {
+      // Cai instantaneamente: a wave não anda.
+      return _stagnationSeconds;
+    }
+    if (fightingSeconds <= secondsToFall) return 0;
+
+    final falls = (fightingSeconds / secondsToFall).ceil() - 1;
+    return falls * reviveSeconds / heroes.length;
+  }
+
+  /// Acima de uma hora por wave, o jogador precisa de equipamento melhor, não
+  /// de esperar (CEN-M09-011).
+  static const double _stagnationSeconds = 3600;
 
   static Monster? _firstAlive(List<Monster> monsters, Monster? candidate) {
     if (candidate == null) return null;
@@ -579,6 +645,15 @@ class CombatEngine {
     }
     return found;
   }
+
+  /// Ouro concedido por derrotar [m], com os bônus de runa já aplicados.
+  ///
+  /// Público porque [OfflineSimulator] precisa da **mesma** função: duas
+  /// fórmulas de recompensa divergiriam com o tempo e o jogador receberia
+  /// valores diferentes por ter fechado o app (research.md R3).
+  GameNumber goldFor(Monster m) => runes.applyGold(_goldFor(m));
+
+  GameNumber xpFor(Monster m) => runes.applyXp(_xpFor(m));
 
   static GameNumber _goldFor(Monster m) =>
       m.stats.maxHp.scaled(m.isBoss ? 0.5 : 0.1);
