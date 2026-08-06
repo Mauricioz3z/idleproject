@@ -75,6 +75,13 @@ flutter:
 
   assets:
     - assets/content/
+    # Sprites conforme contracts/assets-sprites.md. As pastas são declaradas
+    # mesmo vazias: assim o .zip da arte entra sem mexer neste arquivo, e o
+    # jogo continua rodando com os retângulos até ela chegar.
+    - assets/sprites/heroes/
+    - assets/sprites/monsters/
+    - assets/sprites/items/
+    - assets/sprites/backgrounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
