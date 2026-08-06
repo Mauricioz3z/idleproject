@@ -1,1 +1,2934 @@
-[]
+[
+ {
+  "id": "might_00",
+  "cost": 1,
+  "neighborIds": [
+   "might_01",
+   "might_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.03
+  }
+ },
+ {
+  "id": "might_01",
+  "cost": 1,
+  "neighborIds": [
+   "might_00",
+   "might_03",
+   "might_04",
+   "might_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.03
+  }
+ },
+ {
+  "id": "might_02",
+  "cost": 1,
+  "neighborIds": [
+   "might_00",
+   "might_05",
+   "might_06",
+   "might_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.042
+  }
+ },
+ {
+  "id": "might_03",
+  "cost": 1,
+  "neighborIds": [
+   "might_01",
+   "might_07",
+   "might_08",
+   "might_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.042
+  }
+ },
+ {
+  "id": "might_04",
+  "cost": 1,
+  "neighborIds": [
+   "might_01",
+   "might_09",
+   "might_10",
+   "might_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.054
+  }
+ },
+ {
+  "id": "might_05",
+  "cost": 1,
+  "neighborIds": [
+   "might_02",
+   "might_11",
+   "might_12",
+   "might_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.054
+  }
+ },
+ {
+  "id": "might_06",
+  "cost": 1,
+  "neighborIds": [
+   "might_02",
+   "might_13",
+   "might_14",
+   "might_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.054
+  }
+ },
+ {
+  "id": "might_07",
+  "cost": 1,
+  "neighborIds": [
+   "might_03",
+   "might_15",
+   "might_16",
+   "might_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.054
+  }
+ },
+ {
+  "id": "might_08",
+  "cost": 2,
+  "neighborIds": [
+   "might_03",
+   "might_17",
+   "might_18",
+   "might_07"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_09",
+  "cost": 2,
+  "neighborIds": [
+   "might_04",
+   "might_19",
+   "might_20",
+   "might_10",
+   "resolve_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_10",
+  "cost": 2,
+  "neighborIds": [
+   "might_04",
+   "might_21",
+   "might_22",
+   "might_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_11",
+  "cost": 2,
+  "neighborIds": [
+   "might_05",
+   "might_23",
+   "might_24",
+   "might_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_12",
+  "cost": 2,
+  "neighborIds": [
+   "might_05",
+   "might_25",
+   "might_26",
+   "might_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_13",
+  "cost": 2,
+  "neighborIds": [
+   "might_06",
+   "might_27",
+   "might_28",
+   "might_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_14",
+  "cost": 2,
+  "neighborIds": [
+   "might_06",
+   "might_29",
+   "might_30",
+   "might_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_15",
+  "cost": 2,
+  "neighborIds": [
+   "might_07",
+   "might_31",
+   "might_32",
+   "might_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.066
+  }
+ },
+ {
+  "id": "might_16",
+  "cost": 2,
+  "neighborIds": [
+   "might_07",
+   "might_33",
+   "might_34",
+   "might_15"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_17",
+  "cost": 2,
+  "neighborIds": [
+   "might_08",
+   "might_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_18",
+  "cost": 2,
+  "neighborIds": [
+   "might_08",
+   "might_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_19",
+  "cost": 2,
+  "neighborIds": [
+   "might_09",
+   "might_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_20",
+  "cost": 2,
+  "neighborIds": [
+   "might_09",
+   "might_19",
+   "precision_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_21",
+  "cost": 2,
+  "neighborIds": [
+   "might_10",
+   "might_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_22",
+  "cost": 2,
+  "neighborIds": [
+   "might_10",
+   "might_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_23",
+  "cost": 2,
+  "neighborIds": [
+   "might_11",
+   "might_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_24",
+  "cost": 2,
+  "neighborIds": [
+   "might_11",
+   "might_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_25",
+  "cost": 2,
+  "neighborIds": [
+   "might_12",
+   "might_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_26",
+  "cost": 2,
+  "neighborIds": [
+   "might_12",
+   "might_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_27",
+  "cost": 2,
+  "neighborIds": [
+   "might_13",
+   "might_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_28",
+  "cost": 2,
+  "neighborIds": [
+   "might_13",
+   "might_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_29",
+  "cost": 2,
+  "neighborIds": [
+   "might_14",
+   "might_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_30",
+  "cost": 2,
+  "neighborIds": [
+   "might_14",
+   "might_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_31",
+  "cost": 2,
+  "neighborIds": [
+   "might_15",
+   "might_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.078
+  }
+ },
+ {
+  "id": "might_32",
+  "cost": 3,
+  "neighborIds": [
+   "might_15",
+   "might_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.09
+  }
+ },
+ {
+  "id": "might_33",
+  "cost": 3,
+  "neighborIds": [
+   "might_16",
+   "might_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.09
+  }
+ },
+ {
+  "id": "might_34",
+  "cost": 3,
+  "neighborIds": [
+   "might_16",
+   "might_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.09
+  }
+ },
+ {
+  "id": "fortune_00",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_01",
+   "fortune_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "fortune_01",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_00",
+   "fortune_03",
+   "fortune_04",
+   "fortune_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "fortune_02",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_00",
+   "fortune_05",
+   "fortune_06",
+   "fortune_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.052
+  }
+ },
+ {
+  "id": "fortune_03",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_01",
+   "fortune_07",
+   "fortune_08",
+   "fortune_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.052
+  }
+ },
+ {
+  "id": "fortune_04",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_01",
+   "fortune_09",
+   "fortune_10",
+   "fortune_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "fortune_05",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_02",
+   "fortune_11",
+   "fortune_12",
+   "fortune_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "fortune_06",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_02",
+   "fortune_13",
+   "fortune_14",
+   "fortune_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "fortune_07",
+  "cost": 1,
+  "neighborIds": [
+   "fortune_03",
+   "fortune_15",
+   "fortune_16",
+   "fortune_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "fortune_08",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_03",
+   "fortune_17",
+   "fortune_18",
+   "fortune_07"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_09",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_04",
+   "fortune_19",
+   "fortune_20",
+   "fortune_10",
+   "wisdom_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_10",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_04",
+   "fortune_21",
+   "fortune_22",
+   "fortune_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_11",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_05",
+   "fortune_23",
+   "fortune_24",
+   "fortune_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_12",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_05",
+   "fortune_25",
+   "fortune_26",
+   "fortune_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_13",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_06",
+   "fortune_27",
+   "fortune_28",
+   "fortune_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_14",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_06",
+   "fortune_29",
+   "fortune_30",
+   "fortune_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_15",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_07",
+   "fortune_31",
+   "fortune_32",
+   "fortune_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "fortune_16",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_07",
+   "fortune_33",
+   "fortune_34",
+   "fortune_15"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_17",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_08",
+   "fortune_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_18",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_08",
+   "fortune_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_19",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_09",
+   "fortune_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_20",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_09",
+   "fortune_19"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_21",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_10",
+   "fortune_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_22",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_10",
+   "fortune_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_23",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_11",
+   "fortune_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_24",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_11",
+   "fortune_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_25",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_12",
+   "fortune_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_26",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_12",
+   "fortune_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_27",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_13",
+   "fortune_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_28",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_13",
+   "fortune_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_29",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_14",
+   "fortune_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_30",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_14",
+   "fortune_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_31",
+  "cost": 2,
+  "neighborIds": [
+   "fortune_15",
+   "fortune_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "fortune_32",
+  "cost": 3,
+  "neighborIds": [
+   "fortune_15",
+   "fortune_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "fortune_33",
+  "cost": 3,
+  "neighborIds": [
+   "fortune_16",
+   "fortune_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "fortune_34",
+  "cost": 3,
+  "neighborIds": [
+   "fortune_16",
+   "fortune_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "goldPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "wisdom_00",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_01",
+   "wisdom_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "wisdom_01",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_00",
+   "wisdom_03",
+   "wisdom_04",
+   "wisdom_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "wisdom_02",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_00",
+   "wisdom_05",
+   "wisdom_06",
+   "wisdom_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.052
+  }
+ },
+ {
+  "id": "wisdom_03",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_01",
+   "wisdom_07",
+   "wisdom_08",
+   "wisdom_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.052
+  }
+ },
+ {
+  "id": "wisdom_04",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_01",
+   "wisdom_09",
+   "wisdom_10",
+   "wisdom_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "wisdom_05",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_02",
+   "wisdom_11",
+   "wisdom_12",
+   "wisdom_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "wisdom_06",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_02",
+   "wisdom_13",
+   "wisdom_14",
+   "wisdom_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "wisdom_07",
+  "cost": 1,
+  "neighborIds": [
+   "wisdom_03",
+   "wisdom_15",
+   "wisdom_16",
+   "wisdom_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.064
+  }
+ },
+ {
+  "id": "wisdom_08",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_03",
+   "wisdom_17",
+   "wisdom_18",
+   "wisdom_07",
+   "fortune_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_09",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_04",
+   "wisdom_19",
+   "wisdom_20",
+   "wisdom_10"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_10",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_04",
+   "wisdom_21",
+   "wisdom_22",
+   "wisdom_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_11",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_05",
+   "wisdom_23",
+   "wisdom_24",
+   "wisdom_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_12",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_05",
+   "wisdom_25",
+   "wisdom_26",
+   "wisdom_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_13",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_06",
+   "wisdom_27",
+   "wisdom_28",
+   "wisdom_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_14",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_06",
+   "wisdom_29",
+   "wisdom_30",
+   "wisdom_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_15",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_07",
+   "wisdom_31",
+   "wisdom_32",
+   "wisdom_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.076
+  }
+ },
+ {
+  "id": "wisdom_16",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_07",
+   "wisdom_33",
+   "wisdom_34",
+   "wisdom_15"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_17",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_08",
+   "wisdom_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_18",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_08",
+   "wisdom_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_19",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_09",
+   "wisdom_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_20",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_09",
+   "wisdom_19",
+   "resolve_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_21",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_10",
+   "wisdom_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_22",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_10",
+   "wisdom_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_23",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_11",
+   "wisdom_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_24",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_11",
+   "wisdom_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_25",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_12",
+   "wisdom_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_26",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_12",
+   "wisdom_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_27",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_13",
+   "wisdom_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_28",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_13",
+   "wisdom_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_29",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_14",
+   "wisdom_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_30",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_14",
+   "wisdom_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_31",
+  "cost": 2,
+  "neighborIds": [
+   "wisdom_15",
+   "wisdom_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.088
+  }
+ },
+ {
+  "id": "wisdom_32",
+  "cost": 3,
+  "neighborIds": [
+   "wisdom_15",
+   "wisdom_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "wisdom_33",
+  "cost": 3,
+  "neighborIds": [
+   "wisdom_16",
+   "wisdom_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "wisdom_34",
+  "cost": 3,
+  "neighborIds": [
+   "wisdom_16",
+   "wisdom_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "xpPercent",
+   "value": 0.1
+  }
+ },
+ {
+  "id": "precision_00",
+  "cost": 1,
+  "neighborIds": [
+   "precision_01",
+   "precision_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.008
+  }
+ },
+ {
+  "id": "precision_01",
+  "cost": 1,
+  "neighborIds": [
+   "precision_00",
+   "precision_03",
+   "precision_04",
+   "precision_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.008
+  }
+ },
+ {
+  "id": "precision_02",
+  "cost": 1,
+  "neighborIds": [
+   "precision_00",
+   "precision_05",
+   "precision_06",
+   "precision_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0104
+  }
+ },
+ {
+  "id": "precision_03",
+  "cost": 1,
+  "neighborIds": [
+   "precision_01",
+   "precision_07",
+   "precision_08",
+   "precision_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0104
+  }
+ },
+ {
+  "id": "precision_04",
+  "cost": 1,
+  "neighborIds": [
+   "precision_01",
+   "precision_09",
+   "precision_10",
+   "precision_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0128
+  }
+ },
+ {
+  "id": "precision_05",
+  "cost": 1,
+  "neighborIds": [
+   "precision_02",
+   "precision_11",
+   "precision_12",
+   "precision_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0128
+  }
+ },
+ {
+  "id": "precision_06",
+  "cost": 1,
+  "neighborIds": [
+   "precision_02",
+   "precision_13",
+   "precision_14",
+   "precision_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0128
+  }
+ },
+ {
+  "id": "precision_07",
+  "cost": 1,
+  "neighborIds": [
+   "precision_03",
+   "precision_15",
+   "precision_16",
+   "precision_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0128
+  }
+ },
+ {
+  "id": "precision_08",
+  "cost": 2,
+  "neighborIds": [
+   "precision_03",
+   "precision_17",
+   "precision_18",
+   "precision_07"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_09",
+  "cost": 2,
+  "neighborIds": [
+   "precision_04",
+   "precision_19",
+   "precision_20",
+   "precision_10",
+   "haste_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_10",
+  "cost": 2,
+  "neighborIds": [
+   "precision_04",
+   "precision_21",
+   "precision_22",
+   "precision_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_11",
+  "cost": 2,
+  "neighborIds": [
+   "precision_05",
+   "precision_23",
+   "precision_24",
+   "precision_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_12",
+  "cost": 2,
+  "neighborIds": [
+   "precision_05",
+   "precision_25",
+   "precision_26",
+   "precision_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_13",
+  "cost": 2,
+  "neighborIds": [
+   "precision_06",
+   "precision_27",
+   "precision_28",
+   "precision_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_14",
+  "cost": 2,
+  "neighborIds": [
+   "precision_06",
+   "precision_29",
+   "precision_30",
+   "precision_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_15",
+  "cost": 2,
+  "neighborIds": [
+   "precision_07",
+   "precision_31",
+   "precision_32",
+   "precision_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0152
+  }
+ },
+ {
+  "id": "precision_16",
+  "cost": 2,
+  "neighborIds": [
+   "precision_07",
+   "precision_33",
+   "precision_34",
+   "precision_15",
+   "might_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_17",
+  "cost": 2,
+  "neighborIds": [
+   "precision_08",
+   "precision_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_18",
+  "cost": 2,
+  "neighborIds": [
+   "precision_08",
+   "precision_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_19",
+  "cost": 2,
+  "neighborIds": [
+   "precision_09",
+   "precision_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_20",
+  "cost": 2,
+  "neighborIds": [
+   "precision_09",
+   "precision_19"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_21",
+  "cost": 2,
+  "neighborIds": [
+   "precision_10",
+   "precision_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_22",
+  "cost": 2,
+  "neighborIds": [
+   "precision_10",
+   "precision_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_23",
+  "cost": 2,
+  "neighborIds": [
+   "precision_11",
+   "precision_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_24",
+  "cost": 2,
+  "neighborIds": [
+   "precision_11",
+   "precision_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_25",
+  "cost": 2,
+  "neighborIds": [
+   "precision_12",
+   "precision_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_26",
+  "cost": 2,
+  "neighborIds": [
+   "precision_12",
+   "precision_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_27",
+  "cost": 2,
+  "neighborIds": [
+   "precision_13",
+   "precision_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_28",
+  "cost": 2,
+  "neighborIds": [
+   "precision_13",
+   "precision_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_29",
+  "cost": 2,
+  "neighborIds": [
+   "precision_14",
+   "precision_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_30",
+  "cost": 2,
+  "neighborIds": [
+   "precision_14",
+   "precision_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_31",
+  "cost": 2,
+  "neighborIds": [
+   "precision_15",
+   "precision_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.0176
+  }
+ },
+ {
+  "id": "precision_32",
+  "cost": 3,
+  "neighborIds": [
+   "precision_15",
+   "precision_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.02
+  }
+ },
+ {
+  "id": "precision_33",
+  "cost": 5,
+  "neighborIds": [
+   "precision_16",
+   "precision_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "firstAttackAlwaysCritical",
+   "value": 1
+  }
+ },
+ {
+  "id": "precision_34",
+  "cost": 3,
+  "neighborIds": [
+   "precision_16",
+   "precision_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "critChancePercent",
+   "value": 0.02
+  }
+ },
+ {
+  "id": "haste_00",
+  "cost": 1,
+  "neighborIds": [
+   "haste_01",
+   "haste_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.008
+  }
+ },
+ {
+  "id": "haste_01",
+  "cost": 1,
+  "neighborIds": [
+   "haste_00",
+   "haste_03",
+   "haste_04",
+   "haste_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.008
+  }
+ },
+ {
+  "id": "haste_02",
+  "cost": 1,
+  "neighborIds": [
+   "haste_00",
+   "haste_05",
+   "haste_06",
+   "haste_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.01
+  }
+ },
+ {
+  "id": "haste_03",
+  "cost": 1,
+  "neighborIds": [
+   "haste_01",
+   "haste_07",
+   "haste_08",
+   "haste_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.01
+  }
+ },
+ {
+  "id": "haste_04",
+  "cost": 1,
+  "neighborIds": [
+   "haste_01",
+   "haste_09",
+   "haste_10",
+   "haste_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.012
+  }
+ },
+ {
+  "id": "haste_05",
+  "cost": 1,
+  "neighborIds": [
+   "haste_02",
+   "haste_11",
+   "haste_12",
+   "haste_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.012
+  }
+ },
+ {
+  "id": "haste_06",
+  "cost": 1,
+  "neighborIds": [
+   "haste_02",
+   "haste_13",
+   "haste_14",
+   "haste_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.012
+  }
+ },
+ {
+  "id": "haste_07",
+  "cost": 1,
+  "neighborIds": [
+   "haste_03",
+   "haste_15",
+   "haste_16",
+   "haste_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.012
+  }
+ },
+ {
+  "id": "haste_08",
+  "cost": 2,
+  "neighborIds": [
+   "haste_03",
+   "haste_17",
+   "haste_18",
+   "haste_07",
+   "precision_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_09",
+  "cost": 2,
+  "neighborIds": [
+   "haste_04",
+   "haste_19",
+   "haste_20",
+   "haste_10"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_10",
+  "cost": 2,
+  "neighborIds": [
+   "haste_04",
+   "haste_21",
+   "haste_22",
+   "haste_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_11",
+  "cost": 2,
+  "neighborIds": [
+   "haste_05",
+   "haste_23",
+   "haste_24",
+   "haste_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_12",
+  "cost": 2,
+  "neighborIds": [
+   "haste_05",
+   "haste_25",
+   "haste_26",
+   "haste_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_13",
+  "cost": 2,
+  "neighborIds": [
+   "haste_06",
+   "haste_27",
+   "haste_28",
+   "haste_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_14",
+  "cost": 2,
+  "neighborIds": [
+   "haste_06",
+   "haste_29",
+   "haste_30",
+   "haste_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_15",
+  "cost": 2,
+  "neighborIds": [
+   "haste_07",
+   "haste_31",
+   "haste_32",
+   "haste_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.014
+  }
+ },
+ {
+  "id": "haste_16",
+  "cost": 2,
+  "neighborIds": [
+   "haste_07",
+   "haste_33",
+   "haste_34",
+   "haste_15"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_17",
+  "cost": 2,
+  "neighborIds": [
+   "haste_08",
+   "haste_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_18",
+  "cost": 2,
+  "neighborIds": [
+   "haste_08",
+   "haste_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_19",
+  "cost": 2,
+  "neighborIds": [
+   "haste_09",
+   "haste_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_20",
+  "cost": 2,
+  "neighborIds": [
+   "haste_09",
+   "haste_19"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_21",
+  "cost": 2,
+  "neighborIds": [
+   "haste_10",
+   "haste_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_22",
+  "cost": 2,
+  "neighborIds": [
+   "haste_10",
+   "haste_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_23",
+  "cost": 2,
+  "neighborIds": [
+   "haste_11",
+   "haste_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_24",
+  "cost": 2,
+  "neighborIds": [
+   "haste_11",
+   "haste_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_25",
+  "cost": 2,
+  "neighborIds": [
+   "haste_12",
+   "haste_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_26",
+  "cost": 2,
+  "neighborIds": [
+   "haste_12",
+   "haste_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_27",
+  "cost": 2,
+  "neighborIds": [
+   "haste_13",
+   "haste_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_28",
+  "cost": 2,
+  "neighborIds": [
+   "haste_13",
+   "haste_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_29",
+  "cost": 2,
+  "neighborIds": [
+   "haste_14",
+   "haste_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_30",
+  "cost": 2,
+  "neighborIds": [
+   "haste_14",
+   "haste_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_31",
+  "cost": 2,
+  "neighborIds": [
+   "haste_15",
+   "haste_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.016
+  }
+ },
+ {
+  "id": "haste_32",
+  "cost": 3,
+  "neighborIds": [
+   "haste_15",
+   "haste_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.018
+  }
+ },
+ {
+  "id": "haste_33",
+  "cost": 3,
+  "neighborIds": [
+   "haste_16",
+   "haste_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.018
+  }
+ },
+ {
+  "id": "haste_34",
+  "cost": 3,
+  "neighborIds": [
+   "haste_16",
+   "haste_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "attackSpeedPercent",
+   "value": 0.018
+  }
+ },
+ {
+  "id": "resolve_00",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_01",
+   "resolve_02"
+  ],
+  "isRoot": true,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.02
+  }
+ },
+ {
+  "id": "resolve_01",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_00",
+   "resolve_03",
+   "resolve_04",
+   "resolve_02"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.02
+  }
+ },
+ {
+  "id": "resolve_02",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_00",
+   "resolve_05",
+   "resolve_06",
+   "resolve_01"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.03
+  }
+ },
+ {
+  "id": "resolve_03",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_01",
+   "resolve_07",
+   "resolve_08",
+   "resolve_04"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.03
+  }
+ },
+ {
+  "id": "resolve_04",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_01",
+   "resolve_09",
+   "resolve_10",
+   "resolve_03"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "resolve_05",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_02",
+   "resolve_11",
+   "resolve_12",
+   "resolve_06"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "resolve_06",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_02",
+   "resolve_13",
+   "resolve_14",
+   "resolve_05"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "resolve_07",
+  "cost": 1,
+  "neighborIds": [
+   "resolve_03",
+   "resolve_15",
+   "resolve_16",
+   "resolve_08"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.04
+  }
+ },
+ {
+  "id": "resolve_08",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_03",
+   "resolve_17",
+   "resolve_18",
+   "resolve_07",
+   "might_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_09",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_04",
+   "resolve_19",
+   "resolve_20",
+   "resolve_10"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_10",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_04",
+   "resolve_21",
+   "resolve_22",
+   "resolve_09"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_11",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_05",
+   "resolve_23",
+   "resolve_24",
+   "resolve_12"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_12",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_05",
+   "resolve_25",
+   "resolve_26",
+   "resolve_11"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_13",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_06",
+   "resolve_27",
+   "resolve_28",
+   "resolve_14"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_14",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_06",
+   "resolve_29",
+   "resolve_30",
+   "resolve_13"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_15",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_07",
+   "resolve_31",
+   "resolve_32",
+   "resolve_16"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.05
+  }
+ },
+ {
+  "id": "resolve_16",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_07",
+   "resolve_33",
+   "resolve_34",
+   "resolve_15",
+   "wisdom_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_17",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_08",
+   "resolve_18"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_18",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_08",
+   "resolve_17"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_19",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_09",
+   "resolve_20"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_20",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_09",
+   "resolve_19"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_21",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_10",
+   "resolve_22"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_22",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_10",
+   "resolve_21"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_23",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_11",
+   "resolve_24"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_24",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_11",
+   "resolve_23"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_25",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_12",
+   "resolve_26"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_26",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_12",
+   "resolve_25"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_27",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_13",
+   "resolve_28"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_28",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_13",
+   "resolve_27"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_29",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_14",
+   "resolve_30"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_30",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_14",
+   "resolve_29"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_31",
+  "cost": 2,
+  "neighborIds": [
+   "resolve_15",
+   "resolve_32"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.06
+  }
+ },
+ {
+  "id": "resolve_32",
+  "cost": 3,
+  "neighborIds": [
+   "resolve_15",
+   "resolve_31"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.07
+  }
+ },
+ {
+  "id": "resolve_33",
+  "cost": 3,
+  "neighborIds": [
+   "resolve_16",
+   "resolve_34"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "damagePercent",
+   "value": 0.07
+  }
+ },
+ {
+  "id": "resolve_34",
+  "cost": 5,
+  "neighborIds": [
+   "resolve_16",
+   "resolve_33"
+  ],
+  "isRoot": false,
+  "effect": {
+   "type": "firstAttackAlwaysCritical",
+   "value": 1
+  }
+ }
+]

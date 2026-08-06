@@ -4,6 +4,7 @@ import '../../domain/entities/entitlements.dart';
 import '../../domain/entities/essence.dart';
 import '../../domain/entities/game_item.dart';
 import '../../domain/entities/hero.dart';
+// `CubeBlueprint` mora junto de `Inventory`, que é o agregado que o contém.
 import '../../domain/entities/inventory.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
@@ -100,6 +101,28 @@ abstract final class SaveCodec {
       (raw['droppedAt'] as num?)?.toInt() ?? 0,
     ),
   );
+
+  // ---------------------------------------------------------------- Blueprint
+
+  static Map<String, dynamic> encodeBlueprint(CubeBlueprint b) => {
+    'id': b.id,
+    // Referência histórica: pode apontar para um item já vendido, e é isso que
+    // faz o molde sobreviver à venda da origem (V-CB-01, CEN-M05-E03).
+    'sourceItemId': b.sourceItemId,
+    'type': b.type.id,
+    'targetAffixTypes': [for (final a in b.targetAffixTypes) a.id],
+  };
+
+  static CubeBlueprint decodeBlueprint(Map<dynamic, dynamic> raw) =>
+      CubeBlueprint(
+        id: raw['id'] as String,
+        sourceItemId: raw['sourceItemId'] as String? ?? '',
+        type: ItemType.fromId(raw['type'] as String? ?? ''),
+        targetAffixTypes: [
+          for (final a in (raw['targetAffixTypes'] as List?) ?? const [])
+            AffixType.fromId(a as String),
+        ],
+      );
 
   // ---------------------------------------------------------------- Hero
 
@@ -244,7 +267,9 @@ abstract final class SaveCodec {
     'essences': [
       for (final e in state.inventory.essences) encodeEssence(e),
     ],
-    'blueprints': const <Map<String, dynamic>>[],
+    'blueprints': [
+      for (final b in state.inventory.blueprints) encodeBlueprint(b),
+    ],
   };
 
   static SaveState decodeSave(Map<dynamic, dynamic> raw) {
@@ -281,7 +306,10 @@ abstract final class SaveCodec {
           for (final e in (raw['essences'] as List?) ?? const [])
             decodeEssence(e as Map),
         ],
-        blueprints: const [],
+        blueprints: [
+          for (final b in (raw['blueprints'] as List?) ?? const [])
+            decodeBlueprint(b as Map),
+        ],
       ),
       lastMonotonicMillis:
           (raw['lastMonotonicMillis'] as num?)?.toInt() ?? 0,

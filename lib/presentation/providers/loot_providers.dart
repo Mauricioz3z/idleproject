@@ -236,6 +236,13 @@ class LootController extends Notifier<LootState> {
   /// Todos os itens equipados conhecidos, para gravar no save.
   List<GameItem> get allEquippedItems => _inventory.equippedItems.toList();
 
+  /// Adota um inventário produzido por outro serviço de domínio — hoje, o Cubo.
+  ///
+  /// A operação já vem resolvida por inteiro (materiais fora, resultado
+  /// dentro), e é isso que mantém a fusão atômica também do lado do estado
+  /// observável (CEN-M06-E03).
+  void replaceInventory(Inventory inventory) => _publish(inventory);
+
   /// Itens equipados de um herói, resolvidos pelo catálogo.
   List<GameItem> equippedOf(Hero hero) => [
     for (final id in hero.equippedItemIds)

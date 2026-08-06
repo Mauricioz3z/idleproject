@@ -181,6 +181,16 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **`updatePeriodMillis` do provider ficou em 30 min, como o contrato previa.** Não é o caminho primário e não deve ser confundido com a cadência de R-M11-02: o que mantém o widget correto entre atualizações é a projeção feita no desenho, não a frequência.
 - **T098 exige aparelho.** `integration_test/` não roda em `flutter test`. Além disso, as verificações que dependem do launcher — adicionar o widget, tocar nele, ver a notificação na gaveta — não são automatizáveis de dentro do processo do app e ficaram anotadas no arquivo como validação manual de `quickstart.md` §4.
 
+**Correções descobertas na implementação de US6:**
+
+- **A trilha de conta nunca era alimentada.** `ProgressionService.grantAccountXp` existia desde US1 (T050) e `FormationSlots.evaluate` desde T051, mas nada os chamava: o nível de conta ficava em 1 para sempre. A consequência só aparece aqui — sem nível de conta não há ponto de runa (R-M03-06), e a árvore de 210 nós seria conteúdo inalcançável; de quebra, o 4º slot do nível 25 nunca chegaria. `CombatController.tick` agora alimenta as duas trilhas com o mesmo XP das derrotas, e as curvas diferentes (500/×1,2 contra 100/×1,15) mantêm a conta mais lenta que o herói, como CEN-M03-007 pede.
+- **`RuneModifiers` do motor virou campo mutável, com `applyRunes`.** Recriar o `CombatEngine` para trocar bônus reiniciaria o fluxo de RNG, e o combate voltaria a sortear críticos já sorteados. Trocar só o agregado é seguro justamente porque ele nunca é aplicado ao herói — é o mesmo motivo pelo qual o respec em combate é seguro (CEN-M07-E03).
+- **Percentuais do mesmo tipo somam antes de multiplicar.** Com 20 nós de +10%, multiplicar daria ×6,7 em vez de ×3. A escolha está travada por teste, porque é o tipo de detalhe que ninguém percebe até a curva de balanceamento já ter fugido.
+- **`CubeBlueprint` era `dynamic`.** Os campos `type` e `targetAffixTypes` estavam sem tipo desde a Fase 2, quando ninguém os consumia. Agora são `ItemType` e `List<AffixType>`, e passaram a ser serializados — sem isso o molde não sobreviveria a fechar o app, contra o espírito de V-CB-01.
+- **A ordem dos sorteios da fusão é parte do contrato.** Recriação, tipo, e só então o item: mudar a ordem muda todo o resultado para uma mesma semente. Está anotado no código porque não há como um teste flagrar a intenção, só a consequência.
+- **A Essência tem precedência sobre o molde no sufixo garantido.** Ela é o recurso raro e é consumida de qualquer forma (R-M06-05); deixar o molde vencer gastaria a Essência sem entregar o que ela promete.
+- **A árvore é gerada, não escrita à mão.** 210 nós em 6 constelações, com adjacência simétrica por construção. O teste de conteúdo (T112) percorre a árvore como um jogador percorreria — só desbloqueando o que a adjacência permite — e falha se existir uma região que ninguém conseguiria abrir. Com a árvore autorada, `requireFullRuneTree` voltou a ser exigido no boot.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

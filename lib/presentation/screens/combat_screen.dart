@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app.dart';
 import '../../domain/entities/progress_position.dart';
 import '../game/combat_arena.dart';
 import '../providers/combat_providers.dart';
@@ -139,11 +140,35 @@ class _InventoryBar extends StatelessWidget {
               const Spacer(),
               if (isFull)
                 const Text(
-                  'cheio — drops retidos',
+                  'cheio',
                   style: TextStyle(fontSize: 11, color: Color(0xFFD24B4B)),
                 ),
+              const _BarLink(label: 'Cubo', route: Routes.cube),
+              const _BarLink(label: 'Runas', route: Routes.runes),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Atalho de texto para uma tela de profundidade (Cubo, Runas).
+class _BarLink extends StatelessWidget {
+  const _BarLink({required this.label, required this.route});
+
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 14),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pushNamed(route),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Color(0xFFE8B44A)),
         ),
       ),
     );

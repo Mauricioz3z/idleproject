@@ -4,6 +4,7 @@ import '../../core/constants/game_enums.dart';
 import '../../core/numeric/game_number.dart';
 import '../../core/rng/rng_stream.dart';
 import '../../domain/engines/combat_engine.dart';
+import '../../domain/engines/rune_tree_service.dart';
 import '../../domain/engines/wave_director.dart';
 import '../../domain/entities/entitlements.dart';
 import '../../domain/entities/game_item.dart';
@@ -19,6 +20,7 @@ import '../../domain/progression/gold_rate_tracker.dart';
 import '../../domain/progression/progression_service.dart';
 import 'game_dependencies.dart';
 import 'loot_providers.dart';
+import 'rune_providers.dart';
 import 'wave_providers.dart';
 
 // Reexportado para que quem já importava este arquivo continue enxergando as
@@ -67,6 +69,8 @@ class CombatController extends Notifier<CombatSession> {
   late final WaveDirector _waves;
   late final RngStream _waveRng;
   late final CombatDependencies _deps;
+
+  static const RuneTreeService _runes = RuneTreeService();
 
   /// Apura a taxa de ouro do jogo ativo, que é o que a simulação offline
   /// consome depois (M09).
@@ -129,6 +133,7 @@ class CombatController extends Notifier<CombatSession> {
 
       account = account.copyWith(gold: gold);
       heroes = _grantXp(heroes, xpTotal);
+      account = _grantAccountXp(account, xpTotal);
       _deps.onProgressChanged?.call();
     }
 
@@ -157,6 +162,25 @@ class CombatController extends Notifier<CombatSession> {
       heroes: heroes,
       lastEvents: result,
     );
+  }
+
+  /// Trilha de conta, alimentada pelo mesmo progresso de combate (M03,
+  /// suposição declarada) e independente da trilha de herói (CEN-M03-007).
+  ///
+  /// As duas recebem o mesmo XP e ainda assim andam em ritmos diferentes,
+  /// porque as curvas diferem: a de conta parte de 500 e cresce 20% por nível,
+  /// contra 100 e 15% da de herói. É daqui que saem os pontos de runa
+  /// (R-M03-06) — sem esta chamada a árvore de M07 seria conteúdo inalcançável.
+  PlayerAccount _grantAccountXp(PlayerAccount account, GameNumber xp) {
+    if (xp.isZero) return account;
+
+    final result = _progression.grantAccountXp(account, xp);
+    if (result.levelsGained == 0) return result.account;
+
+    // V-PA-02: subiu de nível, então o 4º slot é reavaliado pelo **único**
+    // caminho autorizado a mexer em `formationSlots` (T051).
+    final slots = FormationSlots.evaluate(result.account);
+    return slots is SlotNoChange ? result.account : slots.account;
   }
 
   List<Hero> _grantXp(List<Hero> heroes, GameNumber xp) => [
@@ -234,6 +258,49 @@ class CombatController extends Notifier<CombatSession> {
     }
   }
 
+  // ------------------------------------------------------------------ runas
+  //
+  // Passam por aqui porque mexem na conta — pontos, ouro e nós desbloqueados —
+  // e porque o agregado precisa chegar ao motor de combate em vigor, sem
+  // reiniciar a wave (CEN-M07-E03).
+
+  /// Desbloqueia um nó e passa a valer no combate imediatamente (CEN-M07-002).
+  UnlockResult unlockRuneNode(String nodeId) {
+    final tree = ref.read(runeTreeProvider);
+    final result = _runes.unlock(nodeId, state.account, tree);
+    if (result is UnlockGranted) {
+      state = state.copyWith(account: result.account);
+      _syncRunes();
+      _deps.onProgressChanged?.call();
+    }
+    return result;
+  }
+
+  /// Devolve os pontos e remove os bônus na hora (CEN-M07-009, CEN-M07-012).
+  RespecResult respecRunes() {
+    final tree = ref.read(runeTreeProvider);
+    final result = _runes.respec(state.account, tree);
+    if (result is RespecDone) {
+      state = state.copyWith(account: result.account);
+      _syncRunes();
+      _deps.onProgressChanged?.call();
+    }
+    return result;
+  }
+
+  /// Recalcula o agregado e o entrega ao motor.
+  ///
+  /// Só o agregado muda: os heróis em campo continuam com o HP e o cooldown que
+  /// tinham, porque nenhum bônus fica gravado neles (CEN-M07-E03).
+  void _syncRunes() {
+    _engine.applyRunes(
+      _runes.modifiersFor(
+        state.account.unlockedRuneNodeIds,
+        ref.read(runeTreeProvider),
+      ),
+    );
+  }
+
   /// Adota um estado carregado do disco ou devolvido pela simulação offline.
   ///
   /// A wave recomeça do início: estado de combate parcial nunca é persistido
@@ -249,6 +316,9 @@ class CombatController extends Notifier<CombatSession> {
       heroes: saved.heroes,
       lastEvents: null,
     );
+    // Os nós do save voltam a valer: sem isto, reabrir o jogo zeraria os
+    // bônus até o primeiro desbloqueio da sessão.
+    _syncRunes();
   }
 
   /// Fotografia do estado persistível. É o que o auto-save de 30 s grava.

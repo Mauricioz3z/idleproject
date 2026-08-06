@@ -12,6 +12,7 @@ import 'domain/engines/state_projector.dart';
 import 'presentation/providers/combat_providers.dart';
 import 'presentation/providers/notification_providers.dart';
 import 'presentation/providers/offline_providers.dart';
+import 'presentation/providers/rune_providers.dart';
 import 'services/background_worker.dart';
 import 'services/home_widget_service.dart';
 import 'services/save_scheduler.dart';
@@ -44,9 +45,9 @@ Future<void> main() async {
     ),
     monstersJson: await rootBundle.loadString('assets/content/monsters.json'),
     runeTreeJson: await rootBundle.loadString('assets/content/rune_tree.json'),
-    // A árvore de runas só é autorada em T123 (US6). Exigir os 200 nós agora
-    // impediria o app de abrir por uma dependência de uma story futura.
-    requireFullRuneTree: false,
+    // A árvore foi autorada em T123: o mínimo de 200 nós volta a ser exigido
+    // no boot. Um conteúdo incompleto agora é erro de build, não um jogo com
+    // metade da progressão faltando.
   );
 
   final repository = HiveSaveRepository(
@@ -72,6 +73,7 @@ Future<void> main() async {
         ),
       ),
       saveRepositoryProvider.overrideWithValue(repository),
+      runeTreeProvider.overrideWithValue(content.runeTree()),
     ],
   );
 

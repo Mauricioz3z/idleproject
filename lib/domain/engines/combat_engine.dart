@@ -7,6 +7,7 @@ import '../entities/progress_position.dart';
 import '../entities/rune_node.dart';
 import '../entities/stats.dart';
 import 'class_mechanics.dart';
+import 'rune_effects.dart';
 
 /// Visão de combate de um herói. Separada de `Hero` porque estes campos são
 /// transitórios: HP corrente, cooldown de ataque e temporizador de revive nunca
@@ -242,7 +243,18 @@ class CombatEngine {
   static const double reviveSeconds = 30;
 
   final RngStream _rng;
-  final RuneModifiers runes;
+
+  /// Bônus de runa em vigor (R-M07-06).
+  ///
+  /// Mutável de propósito: o respec pode acontecer no meio de uma wave
+  /// (CEN-M07-E03), e recriar o motor para trocar os bônus reiniciaria o fluxo
+  /// de RNG — o combate passaria a sortear críticos já sorteados. Trocar o
+  /// agregado é seguro justamente porque ele é recalculado, nunca aplicado ao
+  /// herói.
+  RuneModifiers runes;
+
+  /// Substitui os bônus sem interromper a wave nem tocar no RNG.
+  void applyRunes(RuneModifiers next) => runes = next;
 
   static double effectiveCritChance({required double bonusFromItems}) =>
       baseCritChance + bonusFromItems;
@@ -403,7 +415,10 @@ class CombatEngine {
             hero.bonusCritChance,
       );
       final isCritical =
-          (runes.firstAttackAlwaysCritical && !firstAttackDone) ||
+          RuneEffects.forcesCritical(
+            runes: runes,
+            firstAttackDone: firstAttackDone,
+          ) ||
           _rng.chance(critChance);
       firstAttackDone = true;
 

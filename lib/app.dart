@@ -4,7 +4,9 @@ import 'package:home_widget/home_widget.dart';
 
 import 'presentation/providers/offline_providers.dart';
 import 'presentation/screens/combat_screen.dart';
+import 'presentation/screens/cube_screen.dart';
 import 'presentation/screens/inventory_screen.dart';
+import 'presentation/screens/rune_tree_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/theme/app_theme.dart';
 
@@ -34,6 +36,8 @@ abstract final class Routes {
   static const String combat = '/';
   static const String inventory = '/inventory';
   static const String settings = '/settings';
+  static const String cube = '/cube';
+  static const String runes = '/runes';
 }
 
 /// Raiz da aplicação.
@@ -107,6 +111,8 @@ class _PixelIdleQuestAppState extends ConsumerState<PixelIdleQuestApp>
         Routes.combat: (_) => const CombatScreen(),
         Routes.inventory: (_) => const InventoryScreen(),
         Routes.settings: (_) => const SettingsScreen(),
+        Routes.cube: (_) => const CubeScreen(),
+        Routes.runes: (_) => const RuneTreeScreen(),
       },
     );
   }

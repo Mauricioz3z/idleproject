@@ -271,25 +271,25 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T110 [P] [US6] Testes de M06 cubo (CEN-M06-001 a 010, E01 a E03) em `test/domain/m06_cube_test.dart`
-- [ ] T111 [P] [US6] Testes de M07 runas (CEN-M07-001 a 012, E01 a E03) em `test/domain/m07_runes_test.dart`
-- [ ] T112 [P] [US6] Teste de validação da árvore de conteúdo — ≥200 nós, adjacência simétrica, sem nó órfão (V-RN-01 a 03) — em `test/data/rune_tree_content_test.dart`
+- [x] T110 [P] [US6] Testes de M06 cubo (CEN-M06-001 a 010, E01 a E03) em `test/domain/m06_cube_test.dart`
+- [x] T111 [P] [US6] Testes de M07 runas (CEN-M07-001 a 012, E01 a E03) em `test/domain/m07_runes_test.dart`
+- [x] T112 [P] [US6] Teste de validação da árvore de conteúdo — ≥200 nós, adjacência simétrica, sem nó órfão (V-RN-01 a 03) — em `test/data/rune_tree_content_test.dart`
 
 ### Implementation for User Story 6
 
-- [ ] T113 [US6] Implementar `CubeService.fuse` exigindo 3 materiais de raridade idêntica e recusando sem consumir (CEN-M06-003, 004) em `lib/domain/engines/cube_service.dart`
-- [ ] T114 [US6] Implementar o re-roll completo de atributos e o teto Cósmico (R-M06-02, CEN-M06-E01) em `lib/domain/engines/cube_service.dart`
-- [ ] T115 [US6] Implementar o consumo de `Essence` com sufixo garantido e consumo incondicional (R-M06-04, R-M06-05, V-ES-02) em `lib/domain/engines/cube_service.dart`
-- [ ] T116 [US6] Implementar `imprint` e a recriação probabilística por molde, sobrevivendo à venda do item de origem (CEN-M05-E03), em `lib/domain/engines/cube_service.dart`
-- [ ] T117 [US6] Implementar `preview` expondo a probabilidade antes da confirmação e a atomicidade da fusão, consumindo o RNG na confirmação (CEN-M06-E03, SC-M06-03, V-ENT-04), em `lib/domain/engines/cube_service.dart`
-- [ ] T118 [US6] Implementar `RuneTreeService.unlock` com exigência de adjacência e nós raiz (R-M07-03) em `lib/domain/engines/rune_tree_service.dart`
-- [ ] T119 [US6] Implementar `respecCost` estritamente crescente e `respec` que recusa sem ouro sem devolver pontos (CEN-M07-010, 011) em `lib/domain/engines/rune_tree_service.dart`
-- [ ] T120 [US6] Implementar `modifiersFor` como agregação pura recalculada a cada mudança, segura durante combate (CEN-M07-E03), em `lib/domain/engines/rune_tree_service.dart`
-- [ ] T121 [US6] Ligar `RuneModifiers` ao `CombatEngine` e às fórmulas de ouro e XP em `lib/domain/engines/combat_engine.dart`
-- [ ] T122 [US6] Implementar efeitos de regra especial, como "primeiro ataque de cada wave é crítico" (CEN-M07-007), em `lib/domain/engines/rune_effects.dart`
-- [ ] T123 [US6] Popular `assets/content/rune_tree.json` com 200+ nós em constelação, com efeitos de dano, ouro, XP e regras especiais
-- [ ] T124 [P] [US6] Implementar a tela do Cubo com seleção de materiais, escolha de Essência, preview e confirmação obrigatória em `lib/presentation/screens/cube_screen.dart`
-- [ ] T125 [P] [US6] Implementar a tela da árvore de runas com navegação em constelação, nós desbloqueáveis destacados e custo de respec visível em `lib/presentation/screens/rune_tree_screen.dart`
+- [x] T113 [US6] Implementar `CubeService.fuse` exigindo 3 materiais de raridade idêntica e recusando sem consumir (CEN-M06-003, 004) em `lib/domain/engines/cube_service.dart`
+- [x] T114 [US6] Implementar o re-roll completo de atributos e o teto Cósmico (R-M06-02, CEN-M06-E01) em `lib/domain/engines/cube_service.dart`
+- [x] T115 [US6] Implementar o consumo de `Essence` com sufixo garantido e consumo incondicional (R-M06-04, R-M06-05, V-ES-02) em `lib/domain/engines/cube_service.dart`
+- [x] T116 [US6] Implementar `imprint` e a recriação probabilística por molde, sobrevivendo à venda do item de origem (CEN-M05-E03), em `lib/domain/engines/cube_service.dart`
+- [x] T117 [US6] Implementar `preview` expondo a probabilidade antes da confirmação e a atomicidade da fusão, consumindo o RNG na confirmação (CEN-M06-E03, SC-M06-03, V-ENT-04), em `lib/domain/engines/cube_service.dart`
+- [x] T118 [US6] Implementar `RuneTreeService.unlock` com exigência de adjacência e nós raiz (R-M07-03) em `lib/domain/engines/rune_tree_service.dart`
+- [x] T119 [US6] Implementar `respecCost` estritamente crescente e `respec` que recusa sem ouro sem devolver pontos (CEN-M07-010, 011) em `lib/domain/engines/rune_tree_service.dart`
+- [x] T120 [US6] Implementar `modifiersFor` como agregação pura recalculada a cada mudança, segura durante combate (CEN-M07-E03), em `lib/domain/engines/rune_tree_service.dart`
+- [x] T121 [US6] Ligar `RuneModifiers` ao `CombatEngine` e às fórmulas de ouro e XP em `lib/domain/engines/combat_engine.dart`
+- [x] T122 [US6] Implementar efeitos de regra especial, como "primeiro ataque de cada wave é crítico" (CEN-M07-007), em `lib/domain/engines/rune_effects.dart`
+- [x] T123 [US6] Popular `assets/content/rune_tree.json` com 200+ nós em constelação, com efeitos de dano, ouro, XP e regras especiais
+- [x] T124 [P] [US6] Implementar a tela do Cubo com seleção de materiais, escolha de Essência, preview e confirmação obrigatória em `lib/presentation/screens/cube_screen.dart`
+- [x] T125 [P] [US6] Implementar a tela da árvore de runas com navegação em constelação, nós desbloqueáveis destacados e custo de respec visível em `lib/presentation/screens/rune_tree_screen.dart`
 
 **Checkpoint**: Profundidade de build entregue. Todas as mecânicas de progressão estão completas.
 

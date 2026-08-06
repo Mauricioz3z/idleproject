@@ -1,3 +1,4 @@
+import '../../core/constants/game_enums.dart';
 import 'essence.dart';
 import 'game_item.dart';
 
@@ -14,9 +15,18 @@ class CubeBlueprint {
   });
 
   final String id;
+
+  /// Referência histórica: pode apontar para um item já vendido.
   final String sourceItemId;
-  final dynamic type;
-  final List<dynamic> targetAffixTypes;
+
+  final ItemType type;
+  final List<AffixType> targetAffixTypes;
+
+  @override
+  bool operator ==(Object other) => other is CubeBlueprint && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Agregado de inventário (M05).
