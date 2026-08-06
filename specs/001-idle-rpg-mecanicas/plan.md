@@ -144,6 +144,15 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **Desugaring obrigatório no Android.** `flutter_local_notifications` 22 usa APIs de `java.time` inexistentes no minSdk 24 e exige `isCoreLibraryDesugaringEnabled` mais `desugar_jdk_libs`. Sem isso o APK **não compila** — não é degradação de notificações, é falha de build.
 - **`CombatController._spawnFor` é provisório.** Gera waves com escalonamento fixo; `WaveDirector` (T076, US3) assume a responsabilidade com escalonamento por wave e dificuldade.
 
+**Correções descobertas na implementação de US2:**
+
+- **`RngStream` ganhou `substream(label)`.** `fork` deriva um fluxo novo a cada chamada, o que serve a um consumidor de vida longa que forka uma vez (`CombatEngine`) e falha para um consumidor sem estado que sorteia repetidamente: `rollEssence` receberia o mesmo fluxo do zero a cada monstro e devolveria sempre o mesmo resultado. `substream` memoiza o filho por rótulo e o semeia só a partir de `(seed, label)`, nunca do que o pai consumiu — é o que faz R-M04-13 valer de verdade: mudar a taxa de Essência não desloca nenhum item.
+- **`InventoryService` guarda um catálogo `id → item` dos equipados.** A assinatura de `equip` no contrato recebe apenas `(hero, item, inventory)`, mas CEN-M05-003 exige que o item substituído volte ao inventário como objeto completo, e o herói guarda só o ID (V-H-02). O catálogo é essa resolução. Quem carrega um save precisa semeá-lo com `registerEquipped`, senão o primeiro item substituído após a reabertura se perde — por isso o serviço vive num provider único, compartilhado entre loot e combate.
+- **`intake` recebe `List<GameItem>`, não `List<Hero>`.** O contrato dizia `List<Hero>`; o que a auto-venda precisa excluir são os itens em uso, e derivá-los do herói obrigaria o serviço a resolver IDs duas vezes.
+- **`core/constants/scaling.dart` importa `domain/entities/progress_position.dart`.** É a única importação de `core/` para `domain/`. A alternativa — receber `(difficulty, act, wave)` soltos — abriria espaço para passar `globalWave` no lugar de `wave`, exatamente o erro que V-PP-04 existe para prevenir.
+- **`HeroCombatant` ganhou os percentuais de item.** `bonusCritChance`, `bonusCritDamage` e `attackSpeedMultiplier` ficam fora de `Stats` porque não são atributo bruto: somar `+8% de crítico` a `attack` faria a mesma peça valer coisas diferentes conforme o slot. `withStats` reaplica tudo preservando a **fração** de HP, que é o que permite equipar no meio da wave sem curar de graça nem matar por diferença de teto (SC-M05-04).
+- **As ações de inventário passam pelo `CombatController`.** Vender credita ouro na conta e equipar reaplica atributos ao combatente; as duas coisas moram lá. `LootController` só cuida do inventário.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

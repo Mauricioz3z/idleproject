@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/progress_position.dart';
 import '../game/combat_arena.dart';
 import '../providers/combat_providers.dart';
+import '../providers/loot_providers.dart';
 import '../widgets/progress_hud.dart';
+import 'hero_detail_screen.dart';
+import 'inventory_screen.dart';
 
 /// Tela de combate — a tela principal do jogo.
 ///
@@ -32,9 +35,17 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(combatControllerProvider);
+    final loot = ref.watch(lootControllerProvider);
 
     // Empurra o estado mais recente para a arena a cada rebuild.
     _arena.sync(session.combat, session.lastEvents);
+
+    // Um lote novo de drops vira popup uma única vez. Comparar o contador, e
+    // não a lista, evita repetir o aviso a cada rebuild da tela.
+    ref.listen(lootControllerProvider, (previous, next) {
+      if (previous?.dropSequence == next.dropSequence) return;
+      _arena.showLoot(next.recentDrops);
+    });
 
     return Scaffold(
       body: SafeArea(
@@ -45,6 +56,10 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
               gold: session.account.gold,
               heroesInCombat: session.combat.activeHeroes.length,
             ),
+            _InventoryBar(
+              itemCount: loot.inventory.items.length,
+              isFull: loot.inventoryFull,
+            ),
             Expanded(
               child: ColoredBox(
                 color: const Color(0xFF191527),
@@ -53,6 +68,56 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
             ),
             _FormationBar(session: session),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Atalho para o inventário direto da tela de combate.
+///
+/// Existe por causa de SC-M05-01: comparar e equipar um item recém-dropado tem
+/// de caber em 3 interações a partir daqui — abrir, tocar no item, equipar.
+class _InventoryBar extends StatelessWidget {
+  const _InventoryBar({required this.itemCount, required this.isFull});
+
+  final int itemCount;
+  final bool isFull;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF272238),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const InventoryScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              const Text(
+                'Inventário',
+                style: TextStyle(fontSize: 12, color: Colors.white),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$itemCount/50',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isFull
+                      ? const Color(0xFFD24B4B)
+                      : const Color(0xFFB4AAC6),
+                ),
+              ),
+              const Spacer(),
+              if (isFull)
+                const Text(
+                  'cheio — drops retidos',
+                  style: TextStyle(fontSize: 11, color: Color(0xFFD24B4B)),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -78,12 +143,23 @@ class _FormationBar extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: _HeroCard(
-                  name: hero.classId,
-                  level: hero.level,
-                  isDown: combatants
-                      .where((c) => c.heroId == hero.id)
-                      .any((c) => c.isIncapacitated),
+                child: Builder(
+                  builder: (context) => InkWell(
+                    // Tocar no herói abre seus 7 slots — o caminho de equipar
+                    // sem passar pelo inventário (R-M05-02).
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => HeroDetailScreen(heroId: hero.id),
+                      ),
+                    ),
+                    child: _HeroCard(
+                      name: hero.classId,
+                      level: hero.level,
+                      isDown: combatants
+                          .where((c) => c.heroId == hero.id)
+                          .any((c) => c.isIncapacitated),
+                    ),
+                  ),
                 ),
               ),
             ),

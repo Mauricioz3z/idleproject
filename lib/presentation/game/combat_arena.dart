@@ -5,8 +5,10 @@ import 'package:flame/game.dart';
 import '../../core/numeric/game_number.dart';
 import '../../core/numeric/number_format.dart';
 import '../../domain/engines/combat_engine.dart';
+import '../../domain/entities/game_item.dart';
 import 'components/combatant_component.dart';
 import 'components/damage_number_component.dart';
+import 'components/loot_popup_component.dart';
 
 /// Arena de combate em Flame.
 ///
@@ -45,12 +47,31 @@ class CombatArena extends FlameGame {
   static const double _monsterBaseX = 190;
   static const double _spacing = 34;
 
+  static const double _lootX = 160;
+  static const double _lootBaseY = 60;
+  static const double _lootSpacing = 14;
+
   /// Recebe o estado mais recente e os eventos do tick.
   void sync(CombatState state, CombatTickResult? events) {
     _latest = state;
     _syncHeroes(state);
     _syncMonsters(state);
     if (events != null) _spawnFloatingNumbers(state, events);
+  }
+
+  /// Exibe os itens de um lote de drops (CEN-M04-011).
+  ///
+  /// Empilha os avisos verticalmente para que uma wave que derruba quatro
+  /// monstros de uma vez não sobreponha quatro textos no mesmo pixel.
+  void showLoot(List<GameItem> items) {
+    for (var i = 0; i < items.length; i++) {
+      world.add(
+        LootPopupComponent(
+          item: items[i],
+          position: Vector2(_lootX, _lootBaseY - i * _lootSpacing),
+        ),
+      );
+    }
   }
 
   @override

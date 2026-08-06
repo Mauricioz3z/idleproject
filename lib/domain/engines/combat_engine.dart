@@ -19,12 +19,18 @@ class HeroCombatant {
     required this.currentHp,
     required this.attackCooldown,
     required this.reviveRemaining,
+    required this.bonusCritChance,
+    required this.bonusCritDamage,
+    required this.attackSpeedMultiplier,
   });
 
   factory HeroCombatant.fresh({
     required String heroId,
     required HeroClassDefinition definition,
     required Stats stats,
+    double bonusCritChance = 0,
+    double bonusCritDamage = 0,
+    double attackSpeedMultiplier = 1,
   }) => HeroCombatant._(
     heroId: heroId,
     definition: definition,
@@ -34,12 +40,21 @@ class HeroCombatant {
     // o que sustenta SC-M01-01 (primeiro monstro morto em até 10 s).
     attackCooldown: 0,
     reviveRemaining: null,
+    bonusCritChance: bonusCritChance,
+    bonusCritDamage: bonusCritDamage,
+    attackSpeedMultiplier: attackSpeedMultiplier,
   );
 
   final String heroId;
   final HeroClassDefinition definition;
   final Stats stats;
   final GameNumber currentHp;
+
+  /// Sufixos percentuais dos itens equipados (R-M05-03, CEN-M05-004). Ficam
+  /// fora de [stats] porque não são atributo bruto — ver `HeroStatsResolver`.
+  final double bonusCritChance;
+  final double bonusCritDamage;
+  final double attackSpeedMultiplier;
 
   /// Segundos até o próximo golpe.
   final double attackCooldown;
@@ -60,20 +75,48 @@ class HeroCombatant {
 
   HeroCombatant withHp(GameNumber hp) => _copy(currentHp: hp);
 
+  /// Reaplica os atributos sem interromper a wave (SC-M05-04).
+  ///
+  /// O HP corrente é preservado em **fração**, não em valor absoluto: equipar um
+  /// item de +HP no meio da luta não pode curar o herói de graça, e desequipar
+  /// não pode matá-lo por diferença de teto.
+  HeroCombatant withStats(
+    Stats next, {
+    double bonusCritChance = 0,
+    double bonusCritDamage = 0,
+    double attackSpeedMultiplier = 1,
+  }) {
+    final fraction = hpFraction;
+    return _copy(
+      stats: next,
+      currentHp: next.maxHp.scaled(fraction),
+      bonusCritChance: bonusCritChance,
+      bonusCritDamage: bonusCritDamage,
+      attackSpeedMultiplier: attackSpeedMultiplier,
+    );
+  }
+
   HeroCombatant _copy({
+    Stats? stats,
     GameNumber? currentHp,
     double? attackCooldown,
     double? reviveRemaining,
     bool clearRevive = false,
+    double? bonusCritChance,
+    double? bonusCritDamage,
+    double? attackSpeedMultiplier,
   }) => HeroCombatant._(
     heroId: heroId,
     definition: definition,
-    stats: stats,
+    stats: stats ?? this.stats,
     currentHp: currentHp ?? this.currentHp,
     attackCooldown: attackCooldown ?? this.attackCooldown,
     reviveRemaining: clearRevive
         ? null
         : (reviveRemaining ?? this.reviveRemaining),
+    bonusCritChance: bonusCritChance ?? this.bonusCritChance,
+    bonusCritDamage: bonusCritDamage ?? this.bonusCritDamage,
+    attackSpeedMultiplier: attackSpeedMultiplier ?? this.attackSpeedMultiplier,
   );
 }
 
@@ -117,6 +160,10 @@ class CombatState {
   /// Não existe derrota permanente: a formação inteira caída apenas pausa o
   /// avanço até o revive automático (CEN-M01-010).
   bool get isDefeatState => false;
+
+  /// Substitui os combatentes preservando a wave em andamento. É o caminho de
+  /// equipar um item sem reiniciar a luta (SC-M05-04).
+  CombatState withHeroes(List<HeroCombatant> next) => _copy(heroes: next);
 
   CombatState _copy({
     List<HeroCombatant>? heroes,
@@ -211,6 +258,7 @@ class CombatEngine {
     required HeroClassDefinition attackerClass,
     required bool isCritical,
     double attackerHpFraction = 1.0,
+    double critDamageBonus = 0.0,
   }) {
     final penetration = ClassMechanics.defenseFactor(attackerClass.mechanic);
     final effectiveDefense = defenderStats.defense.scaled(penetration);
@@ -225,7 +273,9 @@ class CombatEngine {
       ),
     );
     damage = runes.applyDamage(damage);
-    if (isCritical) damage = damage.scaled(criticalMultiplier);
+    if (isCritical) {
+      damage = damage.scaled(criticalMultiplier + critDamageBonus);
+    }
 
     return damage < GameNumber.one ? GameNumber.one : damage;
   }
@@ -316,7 +366,8 @@ class CombatEngine {
           1.0 /
           (hero.definition.attacksPerSecond *
               haste *
-              runes.attackSpeedMultiplier);
+              runes.attackSpeedMultiplier *
+              hero.attackSpeedMultiplier);
       heroes[i] = hero._copy(attackCooldown: interval);
 
       // Medtech cura em vez de só bater quando há aliado ferido.
@@ -348,7 +399,8 @@ class CombatEngine {
       final critChance = effectiveCritChance(
         bonusFromItems:
             ClassMechanics.critBonus(hero.definition.mechanic) +
-            runes.bonusCritChance,
+            runes.bonusCritChance +
+            hero.bonusCritChance,
       );
       final isCritical =
           (runes.firstAttackAlwaysCritical && !firstAttackDone) ||
@@ -371,6 +423,7 @@ class CombatEngine {
           attackerClass: hero.definition,
           isCritical: isCritical,
           attackerHpFraction: hero.hpFraction,
+          critDamageBonus: hero.bonusCritDamage,
         );
 
         var hit = monsters[idx].damaged(damage);

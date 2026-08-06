@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../../core/numeric/game_number.dart';
 import '../entities/hero.dart';
 import '../entities/hero_class_definition.dart';
+import '../entities/hero_stats_resolver.dart';
 import '../entities/player_account.dart';
 import '../entities/progress_position.dart';
 import '../entities/stats.dart';
@@ -54,13 +55,12 @@ class ProgressionService {
   /// incapacitados, que continuam ganhando pela wave (CEN-M03-006).
   bool isEligibleForXp(Hero hero) => hero.isInFormation;
 
-  /// Atributos totais de um herói no nível dado.
-  Stats statsForLevel(HeroClassDefinition definition, int level) {
-    final growth = level - 1;
-    if (growth <= 0) return definition.baseStats;
-    return definition.baseStats +
-        definition.statGrowthPerLevel.scaledBy(GameNumber.fromInt(growth));
-  }
+  /// Atributos de um herói no nível dado, sem itens.
+  ///
+  /// Delega para [HeroStatsResolver], que é a fonte única da curva — o atributo
+  /// efetivo soma itens e runas sobre exatamente esta base (R-M05-03).
+  Stats statsForLevel(HeroClassDefinition definition, int level) =>
+      HeroStatsResolver.statsForLevel(definition, level);
 
   /// Concede XP e resolve **todos** os níveis alcançados de uma vez.
   ///

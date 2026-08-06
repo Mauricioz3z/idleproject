@@ -28,6 +28,9 @@ class RngStream {
   late int _s0;
   late int _s1;
 
+  /// Subfluxos nomeados vivos, memoizados por rótulo. Ver [substream].
+  final Map<String, RngStream> _substreams = {};
+
   /// Quantos valores já foram consumidos. Persistido em
   /// `PlayerAccount.rngCounter`.
   int get counter => _counter;
@@ -86,11 +89,34 @@ class RngStream {
   /// Essência sem deslocar todo o loot subsequente (R-M04-13). Se loot e
   /// Essência compartilhassem fluxo, mudar um número de balanceamento mudaria
   /// todos os itens que o jogador receberia dali em diante.
-  RngStream fork(String label) {
+  RngStream fork(String label) =>
+      RngStream(seed: _splitMix(seed ^ _hash(label) ^ _counter));
+
+  /// Subfluxo nomeado **vivo**: a mesma instância é devolvida a cada chamada
+  /// com o mesmo [label], de modo que consumos sucessivos avancem.
+  ///
+  /// [fork] deriva um fluxo novo a cada chamada, o que é o certo para um
+  /// consumidor de vida longa que forka uma vez (o `CombatEngine`), e errado
+  /// para um consumidor sem estado que sorteia repetidamente — cada sorteio
+  /// receberia o mesmo fluxo do zero e devolveria sempre o mesmo resultado.
+  /// `LootGenerator.rollEssence` é exatamente esse caso.
+  ///
+  /// A semente do filho depende só de `(seed, label)`, nunca do que o pai
+  /// consumiu: é isso que sustenta R-M04-13 — mudar a taxa de Essência, ou
+  /// sorteá-la mais vezes, não desloca nenhum item. O contador inicial vem do
+  /// pai apenas para que reabrir o app não recomece a sequência de Essências
+  /// do começo, o que reabriria a porta do save-scumming.
+  RngStream substream(String label) => _substreams.putIfAbsent(
+    label,
+    () => RngStream(seed: _splitMix(seed ^ _hash(label)), counter: _counter),
+  );
+
+  /// FNV-1a de 32 bits sobre o rótulo.
+  static int _hash(String label) {
     var h = 0x811C9DC5;
     for (var i = 0; i < label.length; i++) {
       h = (h ^ label.codeUnitAt(i)) * 0x01000193;
     }
-    return RngStream(seed: _splitMix(seed ^ h ^ _counter));
+    return h;
   }
 }

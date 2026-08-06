@@ -154,26 +154,26 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T057 [P] [US2] Testes de M04 loot (CEN-M04-001 a 013, E01 a E03), incluindo o drop de Essência em CEN-M04-013, em `test/domain/m04_loot_test.dart`
-- [ ] T058 [P] [US2] Testes de M05 inventário (CEN-M05-001 a 012, E01 a E03) e da drenagem de `pendingDrops` (V-INV-04) em `test/domain/m05_inventory_test.dart`
-- [ ] T059 [P] [US2] Teste de determinismo de loot — mesma semente produz a mesma sequência de itens, e a taxa de Essência não desloca o sorteio de itens (R-M04-13) — em `test/domain/determinism_test.dart`
+- [x] T057 [P] [US2] Testes de M04 loot (CEN-M04-001 a 013, E01 a E03), incluindo o drop de Essência em CEN-M04-013, em `test/domain/m04_loot_test.dart`
+- [x] T058 [P] [US2] Testes de M05 inventário (CEN-M05-001 a 012, E01 a E03) e da drenagem de `pendingDrops` (V-INV-04) em `test/domain/m05_inventory_test.dart`
+- [x] T059 [P] [US2] Teste de determinismo de loot — mesma semente produz a mesma sequência de itens, e a taxa de Essência não desloca o sorteio de itens (R-M04-13) — em `test/domain/determinism_test.dart`
 
 ### Implementation for User Story 2
 
-- [ ] T060 [US2] Implementar `LootGenerator.generate` com prefixo coerente ao tipo e 0–3 afixos sem repetição (V-GI-01, V-GI-02) em `lib/domain/engines/loot_generator.dart`
-- [ ] T061 [US2] Implementar `LootGenerator.rollDrop` respeitando `possibleRarities`, `dropChanceModifier` e o teto Cósmico em `lib/domain/engines/loot_generator.dart`
-- [ ] T062 [US2] Implementar `LootGenerator.rollEssence` em fluxo de RNG independente do de `rollDrop` (R-M04-12, R-M04-13) em `lib/domain/engines/loot_generator.dart`
-- [ ] T063 [US2] Implementar a curva de item level `f(wave, act) + 10 × (difficulty − 1)` em `lib/core/constants/scaling.dart`
-- [ ] T064 [P] [US2] Implementar a tabela de afixos por raridade e item level em `lib/core/constants/affix_table.dart`
-- [ ] T065 [US2] Implementar `InventoryService.equip` e `unequip` com devolução do item anterior e transferência entre heróis (CEN-M05-003, E02) em `lib/domain/inventory/inventory_service.dart`
-- [ ] T066 [US2] Implementar `intake` com auto-venda de bronze/prata não favoritados a 50 slots, retorno `Pending` sem descarte, `intakeEssence` sem limite de lotação e `drainPending` invocado a cada mudança de ocupação (V-INV-02 a 04, V-ES-01) em `lib/domain/inventory/inventory_service.dart`
-- [ ] T067 [US2] Implementar favoritar item e venda manual em `lib/domain/inventory/inventory_service.dart`
-- [ ] T068 [US2] Implementar o cálculo de atributos efetivos do herói — base + nível + itens + runas — em `lib/domain/entities/hero_stats_resolver.dart`
-- [ ] T069 [US2] Ligar `CombatTickResult.defeats` a `rollDrop`, `rollEssence` e `intake` em `lib/presentation/providers/loot_providers.dart`
-- [ ] T070 [P] [US2] Implementar `LootPopupComponent` com destaque visual para lendário+ em `lib/presentation/game/components/loot_popup_component.dart`
-- [ ] T071 [P] [US2] Implementar a tela de inventário com cor por raridade, grade de 50 slots e aba de Essências em `lib/presentation/screens/inventory_screen.dart`
-- [ ] T072 [US2] Implementar o comparador de item equipado versus item do inventário, com ganhos e perdas distinguíveis (CEN-M05-006), em `lib/presentation/widgets/item_comparison.dart`
-- [ ] T073 [US2] Implementar a tela de detalhe do herói com os 7 slots de equipamento em `lib/presentation/screens/hero_detail_screen.dart`
+- [x] T060 [US2] Implementar `LootGenerator.generate` com prefixo coerente ao tipo e 0–3 afixos sem repetição (V-GI-01, V-GI-02) em `lib/domain/engines/loot_generator.dart`
+- [x] T061 [US2] Implementar `LootGenerator.rollDrop` respeitando `possibleRarities`, `dropChanceModifier` e o teto Cósmico em `lib/domain/engines/loot_generator.dart`
+- [x] T062 [US2] Implementar `LootGenerator.rollEssence` em fluxo de RNG independente do de `rollDrop` (R-M04-12, R-M04-13) em `lib/domain/engines/loot_generator.dart`
+- [x] T063 [US2] Implementar a curva de item level `f(wave, act) + 10 × (difficulty − 1)` em `lib/core/constants/scaling.dart`
+- [x] T064 [P] [US2] Implementar a tabela de afixos por raridade e item level em `lib/core/constants/affix_table.dart`
+- [x] T065 [US2] Implementar `InventoryService.equip` e `unequip` com devolução do item anterior e transferência entre heróis (CEN-M05-003, E02) em `lib/domain/inventory/inventory_service.dart`
+- [x] T066 [US2] Implementar `intake` com auto-venda de bronze/prata não favoritados a 50 slots, retorno `Pending` sem descarte, `intakeEssence` sem limite de lotação e `drainPending` invocado a cada mudança de ocupação (V-INV-02 a 04, V-ES-01) em `lib/domain/inventory/inventory_service.dart`
+- [x] T067 [US2] Implementar favoritar item e venda manual em `lib/domain/inventory/inventory_service.dart`
+- [x] T068 [US2] Implementar o cálculo de atributos efetivos do herói — base + nível + itens + runas — em `lib/domain/entities/hero_stats_resolver.dart`
+- [x] T069 [US2] Ligar `CombatTickResult.defeats` a `rollDrop`, `rollEssence` e `intake` em `lib/presentation/providers/loot_providers.dart`
+- [x] T070 [P] [US2] Implementar `LootPopupComponent` com destaque visual para lendário+ em `lib/presentation/game/components/loot_popup_component.dart`
+- [x] T071 [P] [US2] Implementar a tela de inventário com cor por raridade, grade de 50 slots e aba de Essências em `lib/presentation/screens/inventory_screen.dart`
+- [x] T072 [US2] Implementar o comparador de item equipado versus item do inventário, com ganhos e perdas distinguíveis (CEN-M05-006), em `lib/presentation/widgets/item_comparison.dart`
+- [x] T073 [US2] Implementar a tela de detalhe do herói com os 7 slots de equipamento em `lib/presentation/screens/hero_detail_screen.dart`
 
 **Checkpoint**: US1 e US2 funcionam de forma independente. O laço de recompensa está fechado.
 

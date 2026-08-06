@@ -1,16 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/game_enums.dart';
 import '../../core/numeric/game_number.dart';
 import '../../core/rng/rng_stream.dart';
 import '../../domain/engines/combat_engine.dart';
+import '../../domain/entities/game_item.dart';
 import '../../domain/entities/hero.dart';
 import '../../domain/entities/hero_class_definition.dart';
+import '../../domain/entities/hero_stats_resolver.dart';
 import '../../domain/entities/monster.dart';
 import '../../domain/entities/monster_template.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
 import '../../domain/progression/formation_slots.dart';
 import '../../domain/progression/progression_service.dart';
+import 'loot_providers.dart';
 
 /// Estado observável de uma sessão de combate.
 ///
@@ -114,6 +118,16 @@ class CombatController extends Notifier<CombatSession> {
         gold = gold + d.goldAwarded;
         xpTotal = xpTotal + d.xpAwarded;
       }
+
+      // T069: as mesmas derrotas que pagam ouro e XP avaliam o drop. Um único
+      // ponto de origem mantém combate e loot na mesma linha do tempo.
+      final loot = ref.read(lootControllerProvider.notifier).onDefeats(
+        defeats: result.defeats,
+        position: account.currentPosition,
+        now: DateTime.now(),
+      );
+      gold = gold + loot.goldFromAutoSell;
+
       account = account.copyWith(gold: gold);
       heroes = _grantXp(heroes, xpTotal);
       _deps.onProgressChanged?.call();
@@ -172,12 +186,7 @@ class CombatController extends Notifier<CombatSession> {
   CombatState _startWave(ProgressPosition position, List<Hero> heroes) {
     final combatants = [
       for (final h in heroes)
-        if (h.isInFormation)
-          HeroCombatant.fresh(
-            heroId: h.id,
-            definition: _classFor(h.classId),
-            stats: _progression.statsForLevel(_classFor(h.classId), h.level),
-          ),
+        if (h.isInFormation) _combatantFor(h),
     ];
 
     return CombatState.start(
@@ -186,6 +195,26 @@ class CombatController extends Notifier<CombatSession> {
       monsters: _spawnFor(position),
     );
   }
+
+  /// Combatente com os atributos efetivos do herói — base, nível e itens
+  /// equipados (R-M05-03).
+  HeroCombatant _combatantFor(Hero hero) {
+    final effective = _effectiveStats(hero);
+    return HeroCombatant.fresh(
+      heroId: hero.id,
+      definition: _classFor(hero.classId),
+      stats: effective.stats,
+      bonusCritChance: effective.bonusCritChance,
+      bonusCritDamage: effective.bonusCritDamage,
+      attackSpeedMultiplier: effective.attackSpeedMultiplier,
+    );
+  }
+
+  HeroEffectiveStats _effectiveStats(Hero hero) => HeroStatsResolver.resolve(
+    definition: _classFor(hero.classId),
+    level: hero.level,
+    equipped: ref.read(lootControllerProvider.notifier).equippedOf(hero),
+  );
 
   /// Geração provisória de wave. `WaveDirector` (T076, US3) assume esta
   /// responsabilidade com escalonamento completo por wave e dificuldade.
@@ -239,6 +268,79 @@ class CombatController extends Notifier<CombatSession> {
     if (result is! SlotNoChange) {
       state = state.copyWith(account: result.account);
     }
+  }
+
+  // ------------------------------------------------------------- inventário
+  //
+  // As ações de inventário passam por aqui, e não direto pelo `LootController`,
+  // porque duas coisas precisam acontecer junto com a mudança de itens: o ouro
+  // da venda entra na conta, e os atributos do herói em combate são reaplicados
+  // sem reiniciar a wave (SC-M05-04).
+
+  void equipItem(String heroId, GameItem item) {
+    final hero = _heroById(heroId);
+    if (hero == null) return;
+
+    final result = ref.read(lootControllerProvider.notifier).equip(hero, item);
+    _replaceHero(result.hero);
+  }
+
+  void unequipSlot(String heroId, ItemType slot) {
+    final hero = _heroById(heroId);
+    if (hero == null) return;
+
+    final result = ref
+        .read(lootControllerProvider.notifier)
+        .unequip(hero, slot);
+    _replaceHero(result.hero);
+  }
+
+  void sellItem(GameItem item) {
+    final gold = ref.read(lootControllerProvider.notifier).sell(item);
+    state = state.copyWith(
+      account: state.account.copyWith(gold: state.account.gold + gold),
+    );
+    _deps.onProgressChanged?.call();
+  }
+
+  void toggleFavorite(GameItem item) {
+    ref.read(lootControllerProvider.notifier).toggleFavorite(item);
+  }
+
+  Hero? _heroById(String id) {
+    for (final h in state.heroes) {
+      if (h.id == id) return h;
+    }
+    return null;
+  }
+
+  /// Troca o herói na lista persistente e reaplica seus atributos ao combatente
+  /// correspondente, preservando a fração de HP e a wave em andamento.
+  void _replaceHero(Hero updated) {
+    final heroes = [
+      for (final h in state.heroes)
+        if (h.id == updated.id) updated else h,
+    ];
+
+    final effective = _effectiveStats(updated);
+    final combatants = [
+      for (final c in state.combat.heroes)
+        if (c.heroId == updated.id)
+          c.withStats(
+            effective.stats,
+            bonusCritChance: effective.bonusCritChance,
+            bonusCritDamage: effective.bonusCritDamage,
+            attackSpeedMultiplier: effective.attackSpeedMultiplier,
+          )
+        else
+          c,
+    ];
+
+    state = state.copyWith(
+      heroes: heroes,
+      combat: state.combat.withHeroes(combatants),
+    );
+    _deps.onProgressChanged?.call();
   }
 }
 
