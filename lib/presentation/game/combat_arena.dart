@@ -47,6 +47,25 @@ class CombatArena extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
     _catalog = await SpriteCatalog.load();
+
+    // O fundo nasce aqui, e não no primeiro `sync`.
+    //
+    // `sync` é chamado do `build` da tela, que roda **antes** de o
+    // `GameWidget` ter layout — e `size` do jogo lança asserção enquanto não
+    // houver. Em `onLoad` o tamanho já existe, porque o Flame garante
+    // `onGameResize` antes. O ato começa em 1 e é corrigido no primeiro
+    // `syncAct`, que é idempotente.
+    final background = BackgroundComponent(act: 1)..size = size.clone();
+    _background = background;
+    world.add(background);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Girar o aparelho não pode deixar o fundo cortado. Este é o único ponto
+    // que deve reagir a tamanho — nunca o caminho de `sync`.
+    _background?.size = size.clone();
   }
 
   static const List<Color> _heroColors = [
@@ -75,17 +94,13 @@ class CombatArena extends FlameGame {
   }
 
   void _syncBackground(CombatState state) {
-    final background = _background ??= () {
-      final component = BackgroundComponent(act: state.position.act)
-        ..size = size.clone();
-      world.add(component);
-      return component;
-    }();
+    // Pode ainda não existir: `sync` vem do `build` da tela, que roda antes de
+    // `onLoad` terminar. Sem fundo, o quadro sai com a cor de base — e o
+    // seguinte já tem tudo.
+    final background = _background;
+    if (background == null) return;
 
     background.syncAct(state.position.act);
-    // A arena é criada antes de conhecer o tamanho da tela; acompanhar o
-    // tamanho a cada sync evita fundo cortado ao girar o aparelho.
-    if (background.size != size) background.size = size.clone();
 
     final act = background.scenery.assetName;
     if (_loadedBackgroundAct != act) {

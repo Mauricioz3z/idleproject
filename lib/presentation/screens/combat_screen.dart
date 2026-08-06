@@ -123,18 +123,21 @@ class _InventoryBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              const Text(
-                'Inventário',
-                style: TextStyle(fontSize: 12, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '$itemCount/50',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isFull
-                      ? const Color(0xFFD24B4B)
-                      : const Color(0xFFB4AAC6),
+              // Flexível com reticências: numa tela estreita, ou com fonte
+              // ampliada por acessibilidade, é o rótulo que cede — não a barra
+              // que estoura. Os atalhos à direita nunca podem sumir, porque
+              // são o único caminho para Cubo, Runas e Loja.
+              Flexible(
+                child: Text(
+                  'Inventário $itemCount/50',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isFull
+                        ? const Color(0xFFD24B4B)
+                        : Colors.white,
+                  ),
                 ),
               ),
               const Spacer(),

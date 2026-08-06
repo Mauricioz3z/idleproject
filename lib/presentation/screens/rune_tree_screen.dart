@@ -144,30 +144,55 @@ class _RespecBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Custo em cima, botões embaixo dividindo a largura em partes iguais.
+    //
+    // A versão anterior punha os três lado a lado e estourava 22 px num
+    // aparelho de 360 dp — e estouraria mais com fonte ampliada por
+    // acessibilidade. Com os botões em `Expanded`, a barra cabe em qualquer
+    // largura sem depender do comprimento do rótulo.
     return Container(
       color: const Color(0xFF1E1B2E),
       padding: const EdgeInsets.all(12),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Text(
-              'Respec: $costLabel de ouro',
-              style: TextStyle(
-                fontSize: 12,
-                color: canAfford
-                    ? const Color(0xFFB4AAC6)
-                    : const Color(0xFFD24B4B),
-              ),
+          Text(
+            'Respec: $costLabel de ouro',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: canAfford
+                  ? const Color(0xFFB4AAC6)
+                  : const Color(0xFFD24B4B),
             ),
           ),
-          TextButton(
-            onPressed: hasUnlocked ? onRespecWithGems : null,
-            child: Text('$gemCost gemas'),
-          ),
-          const SizedBox(width: 4),
-          ElevatedButton(
-            onPressed: hasUnlocked && canAfford ? onRespec : null,
-            child: const Text('Redistribuir'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: hasUnlocked ? onRespecWithGems : null,
+                  child: Text(
+                    '$gemCost gemas',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: hasUnlocked && canAfford ? onRespec : null,
+                  child: const Text(
+                    'Redistribuir',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
