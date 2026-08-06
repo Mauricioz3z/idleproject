@@ -44,6 +44,13 @@ enum ActScenery {
   final Color silhouette;
   final Color accent;
 
+  /// Nome do arquivo em `assets/sprites/backgrounds/`.
+  String get assetName => switch (this) {
+    ActScenery.forest => 'forest',
+    ActScenery.cave => 'cave',
+    ActScenery.citadel => 'citadel',
+  };
+
   /// Cenário do ato. Atos fora de 1..3 caem na Floresta em vez de lançar: um
   /// erro de conteúdo não pode deixar a tela preta durante o combate.
   static ActScenery forAct(int act) => switch (act) {
@@ -61,6 +68,9 @@ class BackgroundComponent extends PositionComponent {
 
   ActScenery scenery;
 
+  /// Imagem do ato, quando entregue. Sem ela, o cenário é desenhado.
+  Sprite? sprite;
+
   /// Altura da faixa de chão, medida a partir da base da arena.
   static const double _groundHeight = 46;
 
@@ -76,6 +86,14 @@ class BackgroundComponent extends PositionComponent {
     final w = size.x;
     final h = size.y;
     if (w <= 0 || h <= 0) return;
+
+    // Com a imagem do ato entregue, ela substitui o cenário desenhado por
+    // inteiro — inclusive as silhuetas, que existem só como substituto.
+    final image = sprite;
+    if (image != null) {
+      image.render(canvas, size: Vector2(w, h));
+      return;
+    }
 
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = scenery.sky);
 

@@ -33,7 +33,10 @@ class BossComponent extends CombatantComponent {
   void render(Canvas canvas) {
     if (!isDown) _renderAura(canvas);
     super.render(canvas);
-    if (!isDown) _renderCrown(canvas);
+    // A coroa desenhada só faz sentido sobre o retângulo. Com sprite, o próprio
+    // desenho do boss carrega a leitura — sobrepor uma coroa genérica brigaria
+    // com a arte.
+    if (!isDown && !hasSprite) _renderCrown(canvas);
   }
 
   void _renderAura(Canvas canvas) {

@@ -176,6 +176,36 @@ class _DeltaRow extends StatelessWidget {
 
 /// Cabeçalho de item reutilizado pelas telas de inventário e de herói: nome,
 /// raridade e cor.
+/// Ícone do tipo de item, tingido pela raridade.
+///
+/// Os ícones são entregues em tons de cinza justamente para isto: 8 arquivos
+/// cobrem as 8 raridades, em vez dos 56 que a combinação exigiria
+/// (contracts/assets-sprites.md §4). Sem o arquivo, cai numa faixa colorida —
+/// a arte pode chegar em levas.
+class ItemIcon extends StatelessWidget {
+  const ItemIcon({required this.item, this.size = 28, super.key});
+
+  final GameItem item;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = RarityPalette.of(item.rarity);
+    return Image.asset(
+      'assets/sprites/items/${item.type.id}.png',
+      width: size,
+      height: size,
+      color: color,
+      // `modulate` multiplica: o cinza claro do ícone vira a cor da raridade e
+      // o contorno escuro continua escuro, preservando a leitura.
+      colorBlendMode: BlendMode.modulate,
+      filterQuality: FilterQuality.none,
+      errorBuilder: (context, error, stack) =>
+          Container(width: 4, height: size, color: color),
+    );
+  }
+}
+
 class ItemHeadline extends StatelessWidget {
   const ItemHeadline({required this.item, this.trailing, super.key});
 
@@ -187,7 +217,7 @@ class ItemHeadline extends StatelessWidget {
     final color = RarityPalette.of(item.rarity);
     return Row(
       children: [
-        Container(width: 4, height: 28, color: color),
+        ItemIcon(item: item),
         const SizedBox(width: 8),
         Expanded(
           child: Column(

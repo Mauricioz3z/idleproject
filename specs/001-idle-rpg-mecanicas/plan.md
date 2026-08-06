@@ -207,6 +207,15 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **`onError` do `SaveScheduler` e `onRepairs` do repositório estavam sem destino.** Os dois ganchos existiam desde a Fase 2 e ninguém os ligava — falha de gravação e reparo de desserialização aconteciam em silêncio. Agora vão para o `AnalyticsService`, que é o que torna esses eventos visíveis em campo.
 - **APK release medido**: 18,6 / 21,0 / 22,4 MB por ABI, contra o teto de 30 MB de `specification.md` §8. Com a arte final (T143) a margem encolhe, e é aí que a conversão para WebP de T145 passa a importar.
 
+**Arte: sprites como código (T143):**
+
+- **A fonte da arte é `tool/`, não os PNGs.** Cada personagem é um mapa de caracteres — um caractere por pixel, sobre a paleta de 32 cores de `specification.md` §7.1. `python tool/generate_sprites.py` emite os 29 PNGs em `assets/sprites/`. Manter a fonte assim torna "ajustar a paleta inteira" ou "corrigir um contorno em todos os sprites" uma edição de uma linha, em vez de retrabalho manual em 29 arquivos.
+- **As animações são derivadas, não desenhadas.** Os 4 quadros de idle, ataque e queda saem da pose base por transformação. Isso elimina por construção o defeito mais comum de pixel art gerada quadro a quadro: os frames de um mesmo personagem não coincidem entre si.
+- **Um defeito que só apareceu ao olhar o resultado**: no quadro de idle, a metade inferior do corpo era carimbada na posição errada — `_stamp(lower, dy=0)` em vez de `dy=waist` —, jogando as pernas em cima da cabeça. Os sprites saíam espremidos no topo do quadro com a metade de baixo vazia. Nenhum teste pegaria isso; foi preciso abrir o PNG e contar as linhas ocupadas.
+- **Ausência de arquivo nunca quebra o jogo.** `SpriteCatalog` devolve `null` e o componente cai no retângulo colorido. É o que permite substituir a arte em levas — e o que impede um zip incompleto de derrubar a tela de combate.
+- **Os ícones de item são cinza e tingidos em runtime** por `BlendMode.modulate`: 8 arquivos cobrem as 8 raridades, em vez dos 56 que a combinação exigiria.
+- **Qualidade**: pixel art indie legível e consistente, não trabalho de artista profissional. O contrato em `contracts/assets-sprites.md` existe justamente para que substituir por arte melhor continue sendo descompactar um zip por cima.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

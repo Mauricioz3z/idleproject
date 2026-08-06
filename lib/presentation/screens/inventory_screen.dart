@@ -118,15 +118,7 @@ class _ItemGrid extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.type.id,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: RarityPalette.of(item.rarity),
-                  ),
-                ),
+                Center(child: ItemIcon(item: item, size: 24)),
                 const Spacer(),
                 Text(
                   'iLv${item.itemLevel}',

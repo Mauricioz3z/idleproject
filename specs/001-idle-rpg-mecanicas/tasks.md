@@ -332,7 +332,7 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 ## Phase 10: Polish & Cross-Cutting Concerns
 
 - [x] T142 [P] Integrar Firebase Analytics e Crashlytics em `lib/services/analytics_service.dart`
-- [ ] T143 [P] Substituir sprites placeholder por pixel art final em `assets/sprites/`, em sprite sheets únicos por classe e por tipo de monstro
+- [x] T143 [P] Substituir sprites placeholder por pixel art final em `assets/sprites/`, em sprite sheets únicos por classe e por tipo de monstro — 29 sprites gerados por `tool/generate_sprites.py` e ligados ao jogo por `SpriteCatalog`
 - [ ] T144 Perfilar com `flutter run --profile` no aparelho de referência de [plan.md](plan.md) e garantir 30 FPS sustentados com 4 heróis e 8 monstros, ajustando `lib/presentation/game/idle_rpg_game.dart` conforme necessário
 - [ ] T145 Converter `assets/sprites/` para WebP e verificar APK release < 30 MB por ABI via `flutter build apk --release --split-per-abi`
 - [x] T146 [P] Implementar tratamento de armazenamento cheio na gravação (CEN-M10-E02) em `lib/data/repositories/hive_save_repository.dart`
@@ -347,16 +347,16 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 As quatro acima que seguem sem marca **não foram esquecidas** — nenhuma delas é
 executável a partir do repositório:
 
-- **T143** exige a pixel art final. `assets/sprites/` está vazio; a apresentação
-  atual é desenhada em código, conforme `specification.md` §6 Fase 1 prescreve
-  para validar o laço antes de investir em arte.
 - **T144** exige o **aparelho de referência** de [plan.md](plan.md) (4 GB, SoC de
   entrada, Android 10). Medir FPS na máquina de desenvolvimento e declarar
   aprovado é exatamente o que `quickstart.md` §1 proíbe.
 - **T145** tem duas metades. A verificação de tamanho **foi executada**:
   `flutter build apk --release --split-per-abi` produziu 18,6 MB (armeabi-v7a),
   21,0 MB (arm64-v8a) e 22,4 MB (x86_64) — todas abaixo do teto de 30 MB. A
-  conversão para WebP depende de T143: não há sprite para converter.
+  conversão para WebP fica **suspensa por não valer a pena**: os 29 sprites
+  somam 25 KB em PNG, e o ganho seria de poucos quilobytes num APK de 20 MB.
+  A tarefa volta a fazer sentido se a arte for substituída por sprites de
+  origem externa, que costumam ser uma ordem de grandeza maiores.
 - **T148** é validação manual em dispositivo (V1 a V7 de
   [quickstart.md](quickstart.md) §4), incluindo a contagem de toques de SC-007 e
   a travessia de SC-008. Exige um humano com o jogo na mão.

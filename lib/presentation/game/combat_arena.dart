@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flame/game.dart';
@@ -11,6 +12,7 @@ import 'components/boss_component.dart';
 import 'components/combatant_component.dart';
 import 'components/damage_number_component.dart';
 import 'components/loot_popup_component.dart';
+import 'sprite_catalog.dart';
 
 /// Arena de combate em Flame.
 ///
@@ -35,9 +37,17 @@ class CombatArena extends FlameGame {
   final Map<String, CombatantComponent> _monsterViews = {};
 
   BackgroundComponent? _background;
+  SpriteCatalog? _catalog;
+  String? _loadedBackgroundAct;
 
   double _accumulator = 0;
   CombatState? _latest;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    _catalog = await SpriteCatalog.load();
+  }
 
   static const List<Color> _heroColors = [
     Color(0xFF4A90D9),
@@ -76,6 +86,16 @@ class CombatArena extends FlameGame {
     // A arena é criada antes de conhecer o tamanho da tela; acompanhar o
     // tamanho a cada sync evita fundo cortado ao girar o aparelho.
     if (background.size != size) background.size = size.clone();
+
+    final act = background.scenery.assetName;
+    if (_loadedBackgroundAct != act) {
+      _loadedBackgroundAct = act;
+      unawaited(
+        _catalog?.background(act).then((sprite) {
+          if (sprite != null) background.sprite = sprite;
+        }) ?? Future<void>.value(),
+      );
+    }
   }
 
   /// Exibe os itens de um lote de drops (CEN-M04-011).
@@ -116,10 +136,31 @@ class CombatArena extends FlameGame {
           color: _heroColors[i % _heroColors.length],
         );
         world.add(c);
+        // O sprite chega depois do componente: carregar é assíncrono e o
+        // combate não pode esperar por asset.
+        unawaited(_dressHero(c, hero.definition.id));
         return c;
       });
       view.hpFraction = hero.hpFraction;
       view.isDown = hero.isIncapacitated;
+    }
+  }
+
+  Future<void> _dressHero(CombatantComponent view, String classId) async {
+    final animations = await _catalog?.hero(classId);
+    if (animations != null && !view.hasSprite) {
+      view.applyAnimations(animations);
+    }
+  }
+
+  Future<void> _dressMonster(
+    CombatantComponent view,
+    String templateId, {
+    required bool isBoss,
+  }) async {
+    final animations = await _catalog?.monster(templateId, isBoss: isBoss);
+    if (animations != null && !view.hasSprite) {
+      view.applyAnimations(animations);
     }
   }
 
@@ -145,6 +186,9 @@ class CombatArena extends FlameGame {
                 isBoss: false,
               );
         world.add(c);
+        unawaited(
+          _dressMonster(c, monster.template.id, isBoss: monster.isBoss),
+        );
         return c;
       });
       view.hpFraction = monster.stats.maxHp.isZero
@@ -163,6 +207,9 @@ class CombatArena extends FlameGame {
 
   void _spawnFloatingNumbers(CombatState state, CombatTickResult events) {
     for (final hit in events.hits) {
+      // Quem bateu toca a animação de golpe; quem apanhou pisca.
+      _heroViews[hit.heroId]?.playAttack();
+
       final target = _monsterViews[hit.monsterId];
       if (target == null) continue;
       target.flashHit();
