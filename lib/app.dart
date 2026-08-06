@@ -1,9 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 
 import 'presentation/providers/offline_providers.dart';
 import 'presentation/screens/combat_screen.dart';
+import 'presentation/screens/inventory_screen.dart';
+import 'presentation/screens/settings_screen.dart';
 import 'presentation/theme/app_theme.dart';
+
+/// Destinos de deep link (contracts/platform-android.md §4).
+///
+/// Todos abrem direto no destino, sem menu intermediário — é o que sustenta
+/// SC-M11-02: do widget ao combate em uma interação.
+abstract final class DeepLinks {
+  static const String scheme = 'pixelidle';
+  static const String combat = 'pixelidle://combat';
+  static const String offlineSummary = 'pixelidle://offline-summary';
+  static const String inventory = 'pixelidle://inventory';
+
+  /// Nome de rota correspondente, ou `null` se o URI não for nosso.
+  static String? routeFor(Uri? uri) {
+    if (uri == null || uri.scheme != scheme) return null;
+    return switch (uri.host) {
+      'combat' => Routes.combat,
+      'offline-summary' => Routes.combat, // o resumo é gate do combate
+      'inventory' => Routes.inventory,
+      _ => null,
+    };
+  }
+}
+
+abstract final class Routes {
+  static const String combat = '/';
+  static const String inventory = '/inventory';
+  static const String settings = '/settings';
+}
 
 /// Raiz da aplicação.
 class PixelIdleQuestApp extends ConsumerStatefulWidget {
@@ -15,6 +46,8 @@ class PixelIdleQuestApp extends ConsumerStatefulWidget {
 
 class _PixelIdleQuestAppState extends ConsumerState<PixelIdleQuestApp>
     with WidgetsBindingObserver {
+  final GlobalKey<NavigatorState> _navigator = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -23,6 +56,7 @@ class _PixelIdleQuestAppState extends ConsumerState<PixelIdleQuestApp>
     // (R-M09-06). O gate está em `OfflineState.blocksCombat`.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(offlineControllerProvider.notifier).boot();
+      _listenToWidgetLaunches();
     });
   }
 
@@ -47,13 +81,33 @@ class _PixelIdleQuestAppState extends ConsumerState<PixelIdleQuestApp>
     }
   }
 
+  /// Toque no widget e ações da notificação chegam por aqui.
+  void _listenToWidgetLaunches() {
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_navigateTo);
+    HomeWidget.widgetClicked.listen(_navigateTo);
+  }
+
+  void _navigateTo(Uri? uri) {
+    final route = DeepLinks.routeFor(uri);
+    // A tela de combate já é a raiz e já mostra o resumo offline quando há um
+    // pendente, então `combat` e `offline-summary` não precisam empilhar nada.
+    if (route == null || route == Routes.combat) return;
+    _navigator.currentState?.pushNamed(route);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Pixel Idle Quest',
       theme: AppTheme.dark(),
       debugShowCheckedModeBanner: false,
-      home: const CombatScreen(),
+      navigatorKey: _navigator,
+      initialRoute: Routes.combat,
+      routes: {
+        Routes.combat: (_) => const CombatScreen(),
+        Routes.inventory: (_) => const InventoryScreen(),
+        Routes.settings: (_) => const SettingsScreen(),
+      },
     );
   }
 }

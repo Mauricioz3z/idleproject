@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Metadados do widget (M11).
+
+  `updatePeriodMillis` em 30 min é rede de segurança, não o caminho primário: o
+  mínimo efetivo da plataforma para este campo é justamente 30 min, e a cadência
+  de 1 min de R-M11-02 só é alcançável com o serviço em primeiro plano
+  (research.md R4). O que mantém o widget correto entre atualizações é a
+  projeção feita no desenho, não a frequência.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/widget_idle_status"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

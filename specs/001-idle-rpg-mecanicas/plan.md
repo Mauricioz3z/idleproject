@@ -171,6 +171,16 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **A persistência foi ligada ao app.** `SaveScheduler` existia desde a Fase 2 mas nada o chamava: `main.dart` agora carrega o save, semeia o RNG a partir dele — sem isso reabrir o app re-sortearia todo o loot — e grava em `onAppPause`. `CombatController` ganhou `restore` e `snapshot`, e `snapshot` sem `now` preserva o `lastSaveAt`, porque a retomada mede a ausência **a partir** dele.
 - **`ClockGuard` trata reinício de processo como caso normal.** O contador monotônico zera com o processo, e é justamente na reabertura que a simulação roda; cruzar os dois relógios ali produziria falso positivo em toda abertura do app.
 
+**Correções descobertas na implementação de US5:**
+
+- **`flutter_local_notifications` 22 mudou para parâmetros nomeados.** `show`, `initialize` e `cancel` passaram a exigir `id:`, `settings:` e `notificationDetails:`. É a segunda vez que esta dependência cobra atenção — a primeira foi o desugaring obrigatório, registrado em US1.
+- **A detecção de evento raro em segundo plano roda o simulador e descarta o estado.** Parece desperdício, mas é o que torna a notificação honesta: a simulação é pura e determinística, então rodá-la agora e de novo na reabertura, a partir do mesmo save e da mesma semente, produz exatamente os mesmos itens. A notificação anuncia o que o jogador **vai** receber, não uma estimativa que o resumo depois desmente. As três restrições do contrato §3 continuam valendo: nenhum combate real, nenhuma gravação de save.
+- **O marcador de "já notifiquei este item" vive no armazenamento do widget, não no save.** É estado de notificação, não progresso. Gravá-lo no save quebraria a regra de escritora única e reabriria a corrida de CEN-M10-E03.
+- **`StateProjector` importa as constantes de `OfflineSimulator` em vez de redeclará-las.** Se o widget tivesse o próprio teto ou a própria penalidade, passaria a prometer um número que o resumo da reabertura não confirmaria — e a discrepância apareceria justamente quando o jogador está mais atento ao ganho. Um teste trava a igualdade das duas constantes.
+- **Empate de instante no "último item raro" resolve pela ordem da lista.** Com `isAfter` estrito, dois itens do mesmo tick manteriam o primeiro, que é o mais antigo dos dois.
+- **`updatePeriodMillis` do provider ficou em 30 min, como o contrato previa.** Não é o caminho primário e não deve ser confundido com a cadência de R-M11-02: o que mantém o widget correto entre atualizações é a projeção feita no desenho, não a frequência.
+- **T098 exige aparelho.** `integration_test/` não roda em `flutter test`. Além disso, as verificações que dependem do launcher — adicionar o widget, tocar nele, ver a notificação na gaveta — não são automatizáveis de dentro do processo do app e ficaram anotadas no arquivo como validação manual de `quickstart.md` §4.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

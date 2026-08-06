@@ -1,6 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Permissões conforme contracts/platform-android.md §6.
+
+      SCHEDULE_EXACT_ALARM **não** é solicitada: alarmes exatos foram
+      descartados em research R4 por custo de bateria e atrito de permissão. A
+      cadência de 1 min vem do serviço em primeiro plano; fora dele o piso de
+      15 min do WorkManager vale, e o widget se mantém correto projetando o
+      estado no momento do desenho.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+. Negar não bloqueia progresso (CEN-M11-E01, SC-M11-04). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Reagenda as tarefas do WorkManager depois de reiniciar o aparelho. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
-        android:label="pixel_idle_quest"
+        android:label="Pixel Idle Quest"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -24,7 +42,42 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!-- Deep links do contrato §4: widget e notificações abrem direto
+                 no destino, sem menu intermediário. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pixelidle" />
+            </intent-filter>
         </activity>
+
+        <!-- Widget de tela inicial (M11). -->
+        <receiver
+            android:name="com.pixelidle.widget.IdleStatusWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action
+                    android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/idle_status_widget_info" />
+        </receiver>
+
+        <!-- Serviço em primeiro plano da notificação persistente. É o único
+             caminho que alcança a cadência de 1 min de R-M11-02. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Mantém o status do jogo visível e atualizado
+                    enquanto o jogador está fora do app." />
+        </service>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

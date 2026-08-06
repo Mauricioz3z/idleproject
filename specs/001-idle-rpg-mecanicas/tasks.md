@@ -242,22 +242,22 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T097 [P] [US5] Testes da projeção do widget — mesma fórmula de M09, com teto de 8 h e penalidade de 0,8 — em `test/domain/m11_projection_test.dart`
-- [ ] T098 [P] [US5] Testes de integração de widget e notificação (CEN-M11-001 a 011, E01 a E03) em `integration_test/m11_widget_test.dart`
+- [x] T097 [P] [US5] Testes da projeção do widget — mesma fórmula de M09, com teto de 8 h e penalidade de 0,8 — em `test/domain/m11_projection_test.dart`
+- [x] T098 [P] [US5] Testes de integração de widget e notificação (CEN-M11-001 a 011, E01 a E03) em `integration_test/m11_widget_test.dart`
 
 ### Implementation for User Story 5
 
-- [ ] T099 [US5] Implementar a projeção de estado a partir de `(save, tempo decorrido)` em `lib/domain/engines/state_projector.dart` conforme [research.md](research.md) R4
-- [ ] T100 [US5] Implementar a escrita do payload plano `w_*`, incluindo `w_projectionBaseMs` e `w_goldPerSecRaw`, em `lib/services/home_widget_service.dart` conforme [contracts/platform-android.md](contracts/platform-android.md) §1
-- [ ] T101 [US5] Implementar o `AppWidgetProvider` Kotlin que projeta o valor no momento do desenho em `android/app/src/main/kotlin/com/pixelidle/widget/IdleStatusWidgetProvider.kt`
-- [ ] T102 [P] [US5] Implementar o layout do widget e o estado inicial neutro para quando não há save (CEN-M11-011) em `android/app/src/main/res/layout/widget_idle_status.xml`
-- [ ] T103 [US5] Implementar a notificação persistente com título, subtexto e as ações Abrir e Coletar Loot em `lib/services/notification_service.dart`
-- [ ] T104 [US5] Implementar os canais `idle_status`, `idle_loot` e `idle_inventory` e o pedido de `POST_NOTIFICATIONS` com degradação graciosa (CEN-M11-E01) em `lib/services/notification_service.dart`
-- [ ] T105 [US5] Implementar as tarefas WorkManager `refresh_widget` e `detect_rare_events` a 15 min, sem executar combate nem gravar save, em `lib/services/background_service.dart`
-- [ ] T106 [US5] Implementar a tarefa `foreground_status` de 1 min via `flutter_foreground_task` em `lib/services/background_service.dart`
-- [ ] T107 [US5] Implementar a opção de desativar a notificação persistente sem afetar progresso (CEN-M11-010) em `lib/presentation/screens/settings_screen.dart`
-- [ ] T108 [US5] Implementar os deep links `pixelidle://combat`, `://offline-summary` e `://inventory` em `lib/app.dart`
-- [ ] T109 [US5] Declarar permissões e o serviço em primeiro plano em `android/app/src/main/AndroidManifest.xml` conforme [contracts/platform-android.md](contracts/platform-android.md) §6, sem `SCHEDULE_EXACT_ALARM`
+- [x] T099 [US5] Implementar a projeção de estado a partir de `(save, tempo decorrido)` em `lib/domain/engines/state_projector.dart` conforme [research.md](research.md) R4
+- [x] T100 [US5] Implementar a escrita do payload plano `w_*`, incluindo `w_projectionBaseMs` e `w_goldPerSecRaw`, em `lib/services/home_widget_service.dart` conforme [contracts/platform-android.md](contracts/platform-android.md) §1
+- [x] T101 [US5] Implementar o `AppWidgetProvider` Kotlin que projeta o valor no momento do desenho em `android/app/src/main/kotlin/com/pixelidle/widget/IdleStatusWidgetProvider.kt`
+- [x] T102 [P] [US5] Implementar o layout do widget e o estado inicial neutro para quando não há save (CEN-M11-011) em `android/app/src/main/res/layout/widget_idle_status.xml`
+- [x] T103 [US5] Implementar a notificação persistente com título, subtexto e as ações Abrir e Coletar Loot em `lib/services/notification_service.dart`
+- [x] T104 [US5] Implementar os canais `idle_status`, `idle_loot` e `idle_inventory` e o pedido de `POST_NOTIFICATIONS` com degradação graciosa (CEN-M11-E01) em `lib/services/notification_service.dart`
+- [x] T105 [US5] Implementar as tarefas WorkManager `refresh_widget` e `detect_rare_events` a 15 min, sem executar combate nem gravar save, em `lib/services/background_service.dart`
+- [x] T106 [US5] Implementar a tarefa `foreground_status` de 1 min via `flutter_foreground_task` em `lib/services/background_service.dart`
+- [x] T107 [US5] Implementar a opção de desativar a notificação persistente sem afetar progresso (CEN-M11-010) em `lib/presentation/screens/settings_screen.dart`
+- [x] T108 [US5] Implementar os deep links `pixelidle://combat`, `://offline-summary` e `://inventory` em `lib/app.dart`
+- [x] T109 [US5] Declarar permissões e o serviço em primeiro plano em `android/app/src/main/AndroidManifest.xml` conforme [contracts/platform-android.md](contracts/platform-android.md) §6, sem `SCHEDULE_EXACT_ALARM`
 
 **Checkpoint**: O diferencial declarado do produto está entregue, com a limitação de plataforma tratada por projeção em vez de escondida.
 
