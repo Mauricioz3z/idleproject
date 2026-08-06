@@ -5,8 +5,8 @@ import '../../domain/engines/cube_service.dart';
 import '../../domain/entities/essence.dart';
 import '../../domain/entities/game_item.dart';
 import '../../domain/entities/inventory.dart';
+import '../../domain/entitlements/gem_sink.dart';
 import 'combat_providers.dart';
-import 'game_dependencies.dart';
 import 'loot_providers.dart';
 
 /// Seleção corrente do Cubo, antes da confirmação.
@@ -54,6 +54,35 @@ class CubeSelection {
 class CubeController extends Notifier<CubeSelection> {
   late final CubeService _cube;
   late final RngStream _rng;
+
+  /// Descanso do Cubo entre fusões.
+  ///
+  /// CEN-M12-008 pressupõe "uma operação de cubo em andamento" que gemas
+  /// aceleram; sem nenhuma espera, não haveria o que acelerar. O descanso vem
+  /// **depois** da fusão, e não antes do resultado, de propósito: o item já foi
+  /// sorteado e entregue na confirmação, então acelerar não pode mudar o que
+  /// saiu (V-ENT-04).
+  static const Duration fusionCooldown = Duration(minutes: 3);
+
+  DateTime? _readyAt;
+
+  /// Quanto falta para o Cubo aceitar outra fusão.
+  Duration cooldownRemaining(DateTime now) {
+    final readyAt = _readyAt;
+    if (readyAt == null || !readyAt.isAfter(now)) return Duration.zero;
+    return readyAt.difference(now);
+  }
+
+  bool isResting(DateTime now) => cooldownRemaining(now) > Duration.zero;
+
+  /// Gasta gemas para encerrar o descanso (CEN-M12-008).
+  GemSpendResult rushCooldown() {
+    final result = ref
+        .read(combatControllerProvider.notifier)
+        .spendGems(RushTarget.cubeOperation);
+    if (result is GemSpendApplied) _readyAt = null;
+    return result;
+  }
 
   @override
   CubeSelection build() {
@@ -122,6 +151,14 @@ class CubeController extends Notifier<CubeSelection> {
 
   /// Confirma a fusão (R-M06-09). É aqui, e só aqui, que o RNG é consumido.
   FusionResult confirm() {
+    final now = DateTime.now();
+    if (isResting(now)) {
+      return FusionRejected(
+        ref.read(lootControllerProvider).inventory,
+        FusionRejection.cubeResting,
+      );
+    }
+
     final result = _cube.fuse(
       materials: state.materials,
       inventory: ref.read(lootControllerProvider).inventory,
@@ -137,6 +174,7 @@ class CubeController extends Notifier<CubeSelection> {
           .read(lootControllerProvider.notifier)
           .replaceInventory(result.inventory);
       state = CubeSelection.empty().copyWith(lastResult: result);
+      _readyAt = now.add(fusionCooldown);
     }
     return result;
   }

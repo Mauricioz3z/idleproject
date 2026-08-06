@@ -303,25 +303,25 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 7 ⚠️
 
-- [ ] T126 [P] [US7] Testes de M12 (CEN-M12-001 a 016, E01 a E04) em `test/domain/m12_monetization_test.dart`
-- [ ] T127 [P] [US7] Teste de invariante anti-paywall — nenhum conteúdo de progressão exige `Entitlements` (V-ENT-03, SC-M12-01) — em `test/domain/m12_no_paywall_test.dart`
-- [ ] T128 [P] [US7] Teste do caminho de restauração de compra que não gera quinto slot e credita 500 gemas (CEN-M12-015, V-PA-01, V-ENT-05) em `test/domain/m12_restore_test.dart`
-- [ ] T129 [P] [US7] Teste de que acelerar com gemas não altera a distribuição de resultados (V-ENT-04, FR-029) em `test/domain/m12_gems_test.dart`
+- [x] T126 [P] [US7] Testes de M12 (CEN-M12-001 a 016, E01 a E04) em `test/domain/m12_monetization_test.dart`
+- [x] T127 [P] [US7] Teste de invariante anti-paywall — nenhum conteúdo de progressão exige `Entitlements` (V-ENT-03, SC-M12-01) — em `test/domain/m12_no_paywall_test.dart`
+- [x] T128 [P] [US7] Teste do caminho de restauração de compra que não gera quinto slot e credita 500 gemas (CEN-M12-015, V-PA-01, V-ENT-05) em `test/domain/m12_restore_test.dart`
+- [x] T129 [P] [US7] Teste de que acelerar com gemas não altera a distribuição de resultados (V-ENT-04, FR-029) em `test/domain/m12_gems_test.dart`
 
 ### Implementation for User Story 7
 
-- [ ] T130 [US7] Implementar `EntitlementService.applyAdReward` com extensão de validade do bônus de ouro em vez de soma percentual (V-ENT-01) em `lib/domain/entitlements/entitlement_service.dart`
-- [ ] T131 [US7] Implementar `shouldShowInterstitial` e `registerActTransition` — 1 a cada 5 transições, suprimido por `adsRemoved` — em `lib/domain/entitlements/entitlement_service.dart`
-- [ ] T132 [US7] Implementar `applyPurchase` delegando o 4º slot a `evaluateFourthSlot`, sem escrever `formationSlots` diretamente (V-PA-02), em `lib/domain/entitlements/entitlement_service.dart`
-- [ ] T133 [US7] Implementar `GemSink.spendToRush` com débito, recusa por saldo insuficiente e neutralidade sobre o sorteio (FR-029, V-ENT-04) em `lib/domain/entitlements/gem_sink.dart`
-- [ ] T134 [US7] Ligar `spendToRush(cubeOperation)` à tela do Cubo, acelerando a conclusão sem alterar o resultado já sorteado (CEN-M12-008), em `lib/presentation/screens/cube_screen.dart`
-- [ ] T135 [US7] Ligar `spendToRush(runeRespec)` ao respec, reduzindo tempo ou custo em ouro sem tornar nós inacessíveis (CEN-M12-009), em `lib/presentation/screens/rune_tree_screen.dart`
-- [ ] T136 [US7] Implementar `AdService` com concessão apenas no callback de visualização completa e falha silenciosa sem rede (CEN-M12-004, E01) em `lib/services/ad_service.dart`
-- [ ] T137 [US7] Implementar `IapService` com os product IDs de [contracts/platform-android.md](contracts/platform-android.md) §5 e restauração no boot em `lib/services/iap_service.dart`
-- [ ] T138 [US7] Implementar o revive instantâneo por anúncio, cancelando o timer de 30 s (CEN-M12-002), em `lib/presentation/providers/combat_providers.dart`
-- [ ] T139 [US7] Implementar o bônus de ouro de +50% por 4 h aplicado ao cálculo de ouro em combate e offline em `lib/domain/entitlements/gold_boost.dart`
-- [ ] T140 [US7] Implementar o slot extra de cubo por anúncio em `lib/presentation/screens/cube_screen.dart`
-- [ ] T141 [P] [US7] Implementar a loja com as ofertas de M12, saldo de gemas e tempo restante de bônus ativo em `lib/presentation/screens/store_screen.dart`
+- [x] T130 [US7] Implementar `EntitlementService.applyAdReward` com extensão de validade do bônus de ouro em vez de soma percentual (V-ENT-01) em `lib/domain/entitlements/entitlement_service.dart`
+- [x] T131 [US7] Implementar `shouldShowInterstitial` e `registerActTransition` — 1 a cada 5 transições, suprimido por `adsRemoved` — em `lib/domain/entitlements/entitlement_service.dart`
+- [x] T132 [US7] Implementar `applyPurchase` delegando o 4º slot a `evaluateFourthSlot`, sem escrever `formationSlots` diretamente (V-PA-02), em `lib/domain/entitlements/entitlement_service.dart`
+- [x] T133 [US7] Implementar `GemSink.spendToRush` com débito, recusa por saldo insuficiente e neutralidade sobre o sorteio (FR-029, V-ENT-04) em `lib/domain/entitlements/gem_sink.dart`
+- [x] T134 [US7] Ligar `spendToRush(cubeOperation)` à tela do Cubo, acelerando a conclusão sem alterar o resultado já sorteado (CEN-M12-008), em `lib/presentation/screens/cube_screen.dart`
+- [x] T135 [US7] Ligar `spendToRush(runeRespec)` ao respec, reduzindo tempo ou custo em ouro sem tornar nós inacessíveis (CEN-M12-009), em `lib/presentation/screens/rune_tree_screen.dart`
+- [x] T136 [US7] Implementar `AdService` com concessão apenas no callback de visualização completa e falha silenciosa sem rede (CEN-M12-004, E01) em `lib/services/ad_service.dart`
+- [x] T137 [US7] Implementar `IapService` com os product IDs de [contracts/platform-android.md](contracts/platform-android.md) §5 e restauração no boot em `lib/services/iap_service.dart`
+- [x] T138 [US7] Implementar o revive instantâneo por anúncio, cancelando o timer de 30 s (CEN-M12-002), em `lib/presentation/providers/combat_providers.dart`
+- [x] T139 [US7] Implementar o bônus de ouro de +50% por 4 h aplicado ao cálculo de ouro em combate e offline em `lib/domain/entitlements/gold_boost.dart`
+- [x] T140 [US7] Implementar o slot extra de cubo por anúncio em `lib/presentation/screens/cube_screen.dart`
+- [x] T141 [P] [US7] Implementar a loja com as ofertas de M12, saldo de gemas e tempo restante de bônus ativo em `lib/presentation/screens/store_screen.dart`
 
 > **Fora de escopo desta feature** (R-M12-12): aplicação da skin exclusiva do Pacote de Início e desbloqueio de classes de DLC. T137 registra as compras; o conteúdo correspondente é pós-lançamento, conforme `specification.md` §6 Fase 5.
 

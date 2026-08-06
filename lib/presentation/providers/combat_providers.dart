@@ -15,6 +15,9 @@ import '../../domain/entities/monster.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
 import '../../domain/entities/save_state.dart';
+import '../../domain/entitlements/entitlement_service.dart';
+import '../../domain/entitlements/gem_sink.dart';
+import '../../domain/entitlements/gold_boost.dart';
 import '../../domain/progression/formation_slots.dart';
 import '../../domain/progression/gold_rate_tracker.dart';
 import '../../domain/progression/progression_service.dart';
@@ -38,11 +41,23 @@ class CombatSession {
     required this.account,
     required this.heroes,
     required this.lastEvents,
+    this.entitlements = const Entitlements(
+      adsRemoved: false,
+      ownedDlcClassIds: {},
+      goldBoostExpiresAt: null,
+      extraCubeSlots: 0,
+      actTransitionsSinceInterstitial: 0,
+    ),
   });
 
   final CombatState combat;
   final PlayerAccount account;
   final List<Hero> heroes;
+
+  /// Estado de monetização (M12). Vive na sessão porque o bônus de ouro
+  /// multiplica o ouro de cada tick — deixá-lo fora obrigaria a consultar o
+  /// save a cada derrota.
+  final Entitlements entitlements;
 
   /// Eventos do último tick, consumidos pela camada visual para disparar
   /// números flutuantes e popups.
@@ -53,11 +68,13 @@ class CombatSession {
     PlayerAccount? account,
     List<Hero>? heroes,
     CombatTickResult? lastEvents,
+    Entitlements? entitlements,
   }) => CombatSession(
     combat: combat ?? this.combat,
     account: account ?? this.account,
     heroes: heroes ?? this.heroes,
     lastEvents: lastEvents ?? this.lastEvents,
+    entitlements: entitlements ?? this.entitlements,
   );
 }
 
@@ -71,6 +88,7 @@ class CombatController extends Notifier<CombatSession> {
   late final CombatDependencies _deps;
 
   static const RuneTreeService _runes = RuneTreeService();
+  static const EntitlementService _entitlementService = EntitlementService();
 
   /// Apura a taxa de ouro do jogo ativo, que é o que a simulação offline
   /// consome depois (M09).
@@ -113,12 +131,20 @@ class CombatController extends Notifier<CombatSession> {
     var goldThisTick = GameNumber.zero;
 
     if (result.defeats.isNotEmpty) {
+      final now = DateTime.now();
       var gold = account.gold;
       var xpTotal = GameNumber.zero;
       for (final d in result.defeats) {
-        gold = gold + d.goldAwarded;
+        // T139: o bônus de anúncio multiplica o ouro do combate pela mesma
+        // função que o offline usa (GoldBoost), para os dois nunca discordarem.
+        final awarded = GoldBoost.apply(
+          d.goldAwarded,
+          state.entitlements,
+          now,
+        );
+        gold = gold + awarded;
         xpTotal = xpTotal + d.xpAwarded;
-        goldThisTick = goldThisTick + d.goldAwarded;
+        goldThisTick = goldThisTick + awarded;
       }
 
       // T069: as mesmas derrotas que pagam ouro e XP avaliam o drop. Um único
@@ -126,7 +152,7 @@ class CombatController extends Notifier<CombatSession> {
       final loot = ref.read(lootControllerProvider.notifier).onDefeats(
         defeats: result.defeats,
         position: account.currentPosition,
-        now: DateTime.now(),
+        now: now,
       );
       gold = gold + loot.goldFromAutoSell;
       goldThisTick = goldThisTick + loot.goldFromAutoSell;
@@ -258,6 +284,106 @@ class CombatController extends Notifier<CombatSession> {
     }
   }
 
+  // ----------------------------------------------------------- monetização
+  //
+  // Tudo aqui é opcional por construção (R-M12-01): nenhuma destas funções é
+  // chamada por qualquer caminho de progressão.
+
+  /// Concede a recompensa de um anúncio **assistido por inteiro** (R-M12-08).
+  ///
+  /// Chamar isto fora do callback de visualização completa seria conceder por
+  /// um anúncio fechado no meio, contra CEN-M12-004.
+  void grantAdReward(AdReward reward) {
+    final now = DateTime.now();
+    state = state.copyWith(
+      entitlements: _entitlementService.applyAdReward(
+        state.entitlements,
+        reward,
+        now,
+      ),
+    );
+
+    // T138: o revive não é estado persistente — age no combate em curso,
+    // cancelando o temporizador de 30 s (CEN-M12-002).
+    if (reward == AdReward.instantRevive) _reviveFallenHero();
+
+    _deps.onProgressChanged?.call();
+  }
+
+  /// Revive o primeiro herói caído, com HP cheio.
+  ///
+  /// Sem herói caído a oferta não deveria nem aparecer; se aparecer, não
+  /// acontece nada — recusar ou desperdiçar um anúncio nunca pode custar
+  /// progresso (R-M12-07).
+  void _reviveFallenHero() {
+    final heroes = [...state.combat.heroes];
+    final index = heroes.indexWhere((h) => h.isIncapacitated);
+    if (index < 0) return;
+
+    heroes[index] = heroes[index].revivedNow();
+    state = state.copyWith(combat: state.combat.withHeroes(heroes));
+  }
+
+  /// Aplica uma compra concluída (CEN-M12-012).
+  PurchaseResult applyPurchase(PurchaseId id, {String? dlcClassId}) {
+    final result = _entitlementService.applyPurchase(
+      entitlements: state.entitlements,
+      account: state.account,
+      id: id,
+      dlcClassId: dlcClassId,
+    );
+
+    state = state.copyWith(
+      entitlements: result.entitlements,
+      account: result.account,
+    );
+    _deps.onProgressChanged?.call();
+    return result;
+  }
+
+  /// Reaplica compras não consumíveis no boot (CEN-M12-E04).
+  void restorePurchases(List<PurchaseId> purchased) {
+    final result = _entitlementService.restorePurchases(
+      entitlements: state.entitlements,
+      account: state.account,
+      purchased: purchased,
+    );
+    state = state.copyWith(
+      entitlements: result.entitlements,
+      account: result.account,
+    );
+    _deps.onProgressChanged?.call();
+  }
+
+  /// Debita gemas para acelerar uma operação (FR-029).
+  ///
+  /// Devolve o resultado para quem chamou aplicar o efeito; o débito e o efeito
+  /// são separados justamente porque o efeito nunca toca no sorteio (V-ENT-04).
+  GemSpendResult spendGems(RushTarget target) {
+    final result = const GemSink().spendToRush(state.account, target);
+    if (result is GemSpendApplied) {
+      state = state.copyWith(account: result.account);
+      _deps.onProgressChanged?.call();
+    }
+    return result;
+  }
+
+  /// Registra uma transição de ato e diz se cabe um intersticial (R-M12-04).
+  ///
+  /// Nunca durante o combate ou entre waves comuns (CEN-M12-006): só é chamado
+  /// na virada de ato.
+  bool registerActTransition() {
+    final next = _entitlementService.registerActTransition(state.entitlements);
+    final show = _entitlementService.shouldShowInterstitial(next);
+
+    state = state.copyWith(
+      entitlements: show
+          ? _entitlementService.markInterstitialShown(next)
+          : next,
+    );
+    return show;
+  }
+
   // ------------------------------------------------------------------ runas
   //
   // Passam por aqui porque mexem na conta — pontos, ouro e nós desbloqueados —
@@ -277,9 +403,17 @@ class CombatController extends Notifier<CombatSession> {
   }
 
   /// Devolve os pontos e remove os bônus na hora (CEN-M07-009, CEN-M07-012).
-  RespecResult respecRunes() {
+  ///
+  /// [discountedWithGems] aplica o desconto de CEN-M12-009. As gemas já foram
+  /// debitadas por `spendGems` antes de chegar aqui; o que muda é só o preço em
+  /// ouro, nunca os pontos devolvidos nem os nós disponíveis.
+  RespecResult respecRunes({double goldCostMultiplier = 1.0}) {
     final tree = ref.read(runeTreeProvider);
-    final result = _runes.respec(state.account, tree);
+    final result = _runes.respec(
+      state.account,
+      tree,
+      goldCostMultiplier: goldCostMultiplier,
+    );
     if (result is RespecDone) {
       state = state.copyWith(account: result.account);
       _syncRunes();
@@ -315,6 +449,7 @@ class CombatController extends Notifier<CombatSession> {
       account: saved.account,
       heroes: saved.heroes,
       lastEvents: null,
+      entitlements: saved.entitlements,
     );
     // Os nós do save voltam a valer: sem isto, reabrir o jogo zeraria os
     // bônus até o primeiro desbloqueio da sessão.
@@ -341,7 +476,7 @@ class CombatController extends Notifier<CombatSession> {
         goldPerSecond: _goldRate.ratePerSecond,
         lastSaveAt: now ?? state.account.lastSaveAt,
       ),
-      entitlements: Entitlements.initial(),
+      entitlements: state.entitlements,
       heroes: state.heroes,
       equippedItems: equipped,
       inventory: loot.inventory,

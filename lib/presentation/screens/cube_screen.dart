@@ -5,6 +5,7 @@ import '../../domain/engines/cube_service.dart';
 import '../../domain/entities/essence.dart';
 import '../../domain/entities/game_item.dart';
 import '../../domain/entities/inventory.dart';
+import '../../domain/entitlements/gem_sink.dart';
 import '../game/components/loot_popup_component.dart';
 import '../providers/cube_providers.dart';
 import '../providers/loot_providers.dart';
@@ -75,11 +76,18 @@ class CubeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          _ConfirmBar(
-            preview: preview,
-            onConfirm: () => _confirm(context, ref),
-            onClear: controller.clear,
-          ),
+          if (controller.isResting(DateTime.now()))
+            _RestingBar(
+              remaining: controller.cooldownRemaining(DateTime.now()),
+              gemCost: GemSink.costFor(RushTarget.cubeOperation),
+              onRush: () => _rush(context, ref),
+            )
+          else
+            _ConfirmBar(
+              preview: preview,
+              onConfirm: () => _confirm(context, ref),
+              onClear: controller.clear,
+            ),
         ],
       ),
     );
@@ -126,6 +134,19 @@ class CubeScreen extends ConsumerWidget {
     }
   }
 
+  /// CEN-M12-008: gemas encerram o descanso. O item da fusão anterior já foi
+  /// sorteado e entregue, então acelerar não muda resultado nenhum.
+  void _rush(BuildContext context, WidgetRef ref) {
+    final result = ref.read(cubeControllerProvider.notifier).rushCooldown();
+    if (result is GemSpendRejected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gemas insuficientes. Nada foi debitado.'),
+        ),
+      );
+    }
+  }
+
   static String _rejectionMessage(FusionRejection reason) => switch (reason) {
     FusionRejection.notThreeItems =>
       'A fusão precisa de exatamente 3 materiais.',
@@ -137,7 +158,47 @@ class CubeScreen extends ConsumerWidget {
       'Desequipe o item antes de usá-lo como material.',
     FusionRejection.materialNotInInventory =>
       'Um dos materiais não está mais no inventário.',
+    FusionRejection.cubeResting =>
+      'O Cubo ainda está descansando da fusão anterior.',
   };
+}
+
+/// Barra do descanso, com a opção de encerrá-lo com gemas.
+class _RestingBar extends StatelessWidget {
+  const _RestingBar({
+    required this.remaining,
+    required this.gemCost,
+    required this.onRush,
+  });
+
+  final Duration remaining;
+  final int gemCost;
+  final VoidCallback onRush;
+
+  @override
+  Widget build(BuildContext context) {
+    final minutos = remaining.inMinutes;
+    final segundos = remaining.inSeconds.remainder(60);
+
+    return Container(
+      color: const Color(0xFF1E1B2E),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Cubo descansando: ${minutos}m ${segundos}s',
+              style: const TextStyle(fontSize: 12, color: Color(0xFFB4AAC6)),
+            ),
+          ),
+          TextButton(
+            onPressed: onRush,
+            child: Text('Acelerar ($gemCost gemas)'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MaterialSlots extends StatelessWidget {

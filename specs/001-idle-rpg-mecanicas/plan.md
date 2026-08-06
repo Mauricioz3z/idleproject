@@ -191,6 +191,15 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **A Essência tem precedência sobre o molde no sufixo garantido.** Ela é o recurso raro e é consumida de qualquer forma (R-M06-05); deixar o molde vencer gastaria a Essência sem entregar o que ela promete.
 - **A árvore é gerada, não escrita à mão.** 210 nós em 6 constelações, com adjacência simétrica por construção. O teste de conteúdo (T112) percorre a árvore como um jogador percorreria — só desbloqueando o que a adjacência permite — e falha se existir uma região que ninguém conseguiria abrir. Com a árvore autorada, `requireFullRuneTree` voltou a ser exigido no boot.
 
+**Correções descobertas na implementação de US7:**
+
+- **`Entitlements` não vivia na sessão e era descartado a cada save.** `snapshot` gravava `Entitlements.initial()` — quem comprasse "Remover Ads" ou assistisse a um anúncio perderia o benefício ao fechar o app. Agora o estado de monetização vive em `CombatSession` e é persistido; também precisa estar ali porque o bônus de ouro multiplica o ouro de cada tick.
+- **O bônus de ouro offline vale só pelo trecho em que estava ativo.** Um bônus de 4 h não pode multiplicar 8 h de ausência: o jogador receberia mais do que jogando, e assistir a um anúncio antes de fechar o app viraria a forma mais eficiente de progredir — o oposto de SC-M09-02. `OfflineSimulator` calcula a sobreposição entre a janela do bônus e o intervalo simulado.
+- **O Cubo ganhou um descanso entre fusões.** CEN-M12-008 pressupõe "uma operação de cubo em andamento" que gemas aceleram; sem nenhuma espera não haveria o que acelerar. O descanso vem **depois** da fusão, nunca antes do resultado: o item já foi sorteado e entregue na confirmação, então acelerar não pode mudar o que saiu (V-ENT-04). Foi a única forma encontrada de honrar CEN-M12-008 sem criar um estado intermediário que colocasse os materiais em risco (CEN-M06-E03).
+- **`applyPurchase` devolve conta e entitlements, não só entitlements.** A assinatura do contrato não comporta creditar gemas nem conceder slot, que é o que o Pacote de Início faz. O 4º slot continua delegado a `FormationSlots`, como V-PA-02 exige.
+- **Restauração ignora consumíveis.** Recreditar gemas a cada restauração transformaria reinstalar o app numa torneira de moeda. `PurchaseId.isConsumable` marca a fronteira.
+- **`APPLICATION_ID` do AdMob no manifesto.** Sem ele o app **não falha no build — falha ao abrir**; o SDK lança na inicialização. É o tipo de erro que passa por todo o CI e aparece no primeiro aparelho real. Verificado no manifesto mesclado, junto da ausência de `SCHEDULE_EXACT_ALARM`, que nenhum plugin arrastou.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

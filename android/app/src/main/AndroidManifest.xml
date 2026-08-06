@@ -78,6 +78,14 @@
                     enquanto o jogador está fora do app." />
         </service>
 
+        <!-- AdMob. **Obrigatório**: sem esta meta-data o app não falha no
+             build, falha ao abrir — o SDK lança na inicialização. O valor é o
+             ID de amostra do Google; o de produção entra na configuração de
+             release, junto dos unit IDs reais. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

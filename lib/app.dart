@@ -8,6 +8,7 @@ import 'presentation/screens/cube_screen.dart';
 import 'presentation/screens/inventory_screen.dart';
 import 'presentation/screens/rune_tree_screen.dart';
 import 'presentation/screens/settings_screen.dart';
+import 'presentation/screens/store_screen.dart';
 import 'presentation/theme/app_theme.dart';
 
 /// Destinos de deep link (contracts/platform-android.md §4).
@@ -38,6 +39,7 @@ abstract final class Routes {
   static const String settings = '/settings';
   static const String cube = '/cube';
   static const String runes = '/runes';
+  static const String store = '/store';
 }
 
 /// Raiz da aplicação.
@@ -113,6 +115,7 @@ class _PixelIdleQuestAppState extends ConsumerState<PixelIdleQuestApp>
         Routes.settings: (_) => const SettingsScreen(),
         Routes.cube: (_) => const CubeScreen(),
         Routes.runes: (_) => const RuneTreeScreen(),
+        Routes.store: (_) => const StoreScreen(),
       },
     );
   }

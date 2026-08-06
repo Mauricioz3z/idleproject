@@ -76,6 +76,14 @@ class HeroCombatant {
 
   HeroCombatant withHp(GameNumber hp) => _copy(currentHp: hp);
 
+  /// Revive imediatamente com HP cheio, cancelando o temporizador de 30 s.
+  ///
+  /// É o efeito do anúncio de revive (CEN-M12-002). A transição é a mesma do
+  /// revive automático — o anúncio só a antecipa, e é por isso que recusá-lo
+  /// não custa nada (R-M12-07).
+  HeroCombatant revivedNow() =>
+      _copy(currentHp: stats.maxHp, attackCooldown: 0, clearRevive: true);
+
   /// Reaplica os atributos sem interromper a wave (SC-M05-04).
   ///
   /// O HP corrente é preservado em **fração**, não em valor absoluto: equipar um

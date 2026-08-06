@@ -145,6 +145,7 @@ class _InventoryBar extends StatelessWidget {
                 ),
               const _BarLink(label: 'Cubo', route: Routes.cube),
               const _BarLink(label: 'Runas', route: Routes.runes),
+              const _BarLink(label: 'Loja', route: Routes.store),
             ],
           ),
         ),

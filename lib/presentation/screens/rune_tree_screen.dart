@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/numeric/number_format.dart';
 import '../../domain/engines/rune_tree_service.dart';
 import '../../domain/entities/rune_node.dart';
+import '../../domain/entitlements/gem_sink.dart';
 import '../providers/combat_providers.dart';
 import '../providers/rune_providers.dart';
 
@@ -45,7 +46,9 @@ class RuneTreeScreen extends ConsumerWidget {
             costLabel: NumberFormat.compact(cost),
             canAfford: account.gold >= cost,
             hasUnlocked: view.unlockedIds.isNotEmpty,
+            gemCost: GemSink.costFor(RushTarget.runeRespec),
             onRespec: () => _confirmRespec(context, ref),
+            onRespecWithGems: () => _respecWithGems(context, ref),
           ),
         ],
       ),
@@ -78,9 +81,34 @@ class RuneTreeScreen extends ConsumerWidget {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !context.mounted) return;
 
     final result = ref.read(combatControllerProvider.notifier).respecRunes();
+    _report(context, ref, result);
+  }
+
+  /// CEN-M12-009: gemas reduzem o **custo em ouro** do respec. Nenhum nó fica
+  /// inacessível a quem não usa gemas — o desconto não toca na árvore.
+  Future<void> _respecWithGems(BuildContext context, WidgetRef ref) async {
+    final controller = ref.read(combatControllerProvider.notifier);
+    final spend = controller.spendGems(RushTarget.runeRespec);
+
+    if (spend is GemSpendRejected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gemas insuficientes. Nada foi debitado.'),
+        ),
+      );
+      return;
+    }
+
+    final result = controller.respecRunes(
+      goldCostMultiplier: (spend as GemSpendApplied).goldCostMultiplier,
+    );
+    if (context.mounted) _report(context, ref, result);
+  }
+
+  void _report(BuildContext context, WidgetRef ref, RespecResult result) {
     if (result is RespecRejected && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -102,13 +130,17 @@ class _RespecBar extends StatelessWidget {
     required this.costLabel,
     required this.canAfford,
     required this.hasUnlocked,
+    required this.gemCost,
     required this.onRespec,
+    required this.onRespecWithGems,
   });
 
   final String costLabel;
   final bool canAfford;
   final bool hasUnlocked;
+  final int gemCost;
   final VoidCallback onRespec;
+  final VoidCallback onRespecWithGems;
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +160,11 @@ class _RespecBar extends StatelessWidget {
               ),
             ),
           ),
+          TextButton(
+            onPressed: hasUnlocked ? onRespecWithGems : null,
+            child: Text('$gemCost gemas'),
+          ),
+          const SizedBox(width: 4),
           ElevatedButton(
             onPressed: hasUnlocked && canAfford ? onRespec : null,
             child: const Text('Redistribuir'),

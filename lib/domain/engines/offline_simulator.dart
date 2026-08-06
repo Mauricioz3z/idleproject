@@ -1,5 +1,6 @@
 import '../../core/numeric/game_number.dart';
 import '../../core/rng/rng_stream.dart';
+import '../entities/entitlements.dart';
 import '../entities/game_item.dart';
 import '../entities/hero.dart';
 import '../entities/hero_class_definition.dart';
@@ -73,10 +74,9 @@ class OfflineSimulator {
     final wasCapped = elapsed > maxOfflineSeconds;
     final effective = wasCapped ? maxOfflineSeconds : elapsed;
 
-    // R-M09-03: uma multiplicação resolve o ouro de 8 h.
-    final gold = state.account.goldPerSecond
-        .scaled(effective.toDouble())
-        .scaled(offlinePenalty);
+    // R-M09-03: uma multiplicação resolve o ouro de 8 h — mais uma segunda
+    // para a parte do intervalo em que o bônus de anúncio estava valendo.
+    final gold = _goldFor(state: state, now: now, seconds: effective);
 
     final blocks = _simulateWaves(
       state: state,
@@ -152,6 +152,38 @@ class OfflineSimulator {
         inventory: blocks.inventory,
       ),
     );
+  }
+
+  /// Ouro da ausência, com o bônus de anúncio aplicado **só ao trecho em que
+  /// ele estava ativo**.
+  ///
+  /// Um bônus de 4 h não pode multiplicar 8 h de ausência: o jogador receberia
+  /// o dobro do que receberia jogando, e o anúncio viraria a forma mais
+  /// eficiente de progredir — o oposto de SC-M09-02.
+  GameNumber _goldFor({
+    required SaveState state,
+    required DateTime now,
+    required int seconds,
+  }) {
+    final perSecond = state.account.goldPerSecond;
+    if (perSecond.isZero) return GameNumber.zero;
+
+    final start = now.subtract(Duration(seconds: seconds));
+    final expiry = state.entitlements.goldBoostExpiresAt;
+
+    var boosted = 0;
+    if (expiry != null && expiry.isAfter(start)) {
+      final end = expiry.isBefore(now) ? expiry : now;
+      boosted = end.difference(start).inSeconds.clamp(0, seconds);
+    }
+    final plain = seconds - boosted;
+
+    final base = perSecond.scaled(plain.toDouble());
+    final withBoost = perSecond
+        .scaled(boosted.toDouble())
+        .scaled(Entitlements.goldBoostMultiplier);
+
+    return (base + withBoost).scaled(offlinePenalty);
   }
 
   /// R-M09-01 com as duas bordas de R-M09-02 e CEN-M09-E02.

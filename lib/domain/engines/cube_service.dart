@@ -13,6 +13,11 @@ enum FusionRejection {
   maxRarity,
   itemEquipped,
   materialNotInInventory,
+
+  /// O Cubo ainda está em descanso depois da fusão anterior. Recusa de
+  /// **cadência**, não de validade: os materiais continuam bons, é só cedo
+  /// demais (ver `CubeController.fusionCooldown`).
+  cubeResting,
 }
 
 /// Resultado de uma fusão. Recusa **também** devolve o inventário, intacto:

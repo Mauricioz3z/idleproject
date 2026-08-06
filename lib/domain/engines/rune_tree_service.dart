@@ -121,12 +121,20 @@ class RuneTreeService {
   /// Ouro insuficiente recusa sem debitar e sem devolver ponto algum
   /// (CEN-M07-011): meio respec deixaria a conta num estado que nenhuma regra
   /// descreve.
-  RespecResult respec(PlayerAccount account, RuneTreeDefinition tree) {
+  /// [goldCostMultiplier] abaixo de 1 é o desconto pago com gemas
+  /// (CEN-M12-009). Ele altera **apenas** o preço: os pontos devolvidos e os
+  /// nós disponíveis são os mesmos para quem paga e para quem não paga, que é o
+  /// que impede a aceleração de virar vantagem de progressão (V-ENT-04).
+  RespecResult respec(
+    PlayerAccount account,
+    RuneTreeDefinition tree, {
+    double goldCostMultiplier = 1.0,
+  }) {
     if (account.unlockedRuneNodeIds.isEmpty) {
       return RespecRejected(account, RespecRejection.nothingUnlocked);
     }
 
-    final cost = respecCost(account.respecCount);
+    final cost = respecCost(account.respecCount).scaled(goldCostMultiplier);
     if (account.gold < cost) {
       return RespecRejected(account, RespecRejection.insufficientGold);
     }
