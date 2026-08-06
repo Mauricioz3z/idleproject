@@ -6,6 +6,8 @@ import '../../core/numeric/game_number.dart';
 import '../../core/numeric/number_format.dart';
 import '../../domain/engines/combat_engine.dart';
 import '../../domain/entities/game_item.dart';
+import 'components/background_component.dart';
+import 'components/boss_component.dart';
 import 'components/combatant_component.dart';
 import 'components/damage_number_component.dart';
 import 'components/loot_popup_component.dart';
@@ -32,6 +34,8 @@ class CombatArena extends FlameGame {
   final Map<String, CombatantComponent> _heroViews = {};
   final Map<String, CombatantComponent> _monsterViews = {};
 
+  BackgroundComponent? _background;
+
   double _accumulator = 0;
   CombatState? _latest;
 
@@ -54,9 +58,24 @@ class CombatArena extends FlameGame {
   /// Recebe o estado mais recente e os eventos do tick.
   void sync(CombatState state, CombatTickResult? events) {
     _latest = state;
+    _syncBackground(state);
     _syncHeroes(state);
     _syncMonsters(state);
     if (events != null) _spawnFloatingNumbers(state, events);
+  }
+
+  void _syncBackground(CombatState state) {
+    final background = _background ??= () {
+      final component = BackgroundComponent(act: state.position.act)
+        ..size = size.clone();
+      world.add(component);
+      return component;
+    }();
+
+    background.syncAct(state.position.act);
+    // A arena é criada antes de conhecer o tamanho da tela; acompanhar o
+    // tamanho a cada sync evita fundo cortado ao girar o aparelho.
+    if (background.size != size) background.size = size.clone();
   }
 
   /// Exibe os itens de um lote de drops (CEN-M04-011).
@@ -110,11 +129,21 @@ class CombatArena extends FlameGame {
       final monster = state.monsters[i];
       present.add(monster.instanceId);
       final view = _monsterViews.putIfAbsent(monster.instanceId, () {
-        final c = MonsterComponent(
-          entityId: monster.instanceId,
-          position: Vector2(_monsterBaseX + monster.slot * _spacing, _groundY),
-          isBoss: monster.isBoss,
+        final position = Vector2(
+          _monsterBaseX + monster.slot * _spacing,
+          _groundY,
         );
+        // Boss ganha componente próprio, com aura e coroa (T083).
+        final CombatantComponent c = monster.isBoss
+            ? BossComponent(
+                entityId: monster.instanceId,
+                position: position,
+              )
+            : MonsterComponent(
+                entityId: monster.instanceId,
+                position: position,
+                isBoss: false,
+              );
         world.add(c);
         return c;
       });

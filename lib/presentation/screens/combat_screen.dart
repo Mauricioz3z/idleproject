@@ -6,6 +6,7 @@ import '../game/combat_arena.dart';
 import '../providers/combat_providers.dart';
 import '../providers/loot_providers.dart';
 import '../widgets/progress_hud.dart';
+import 'act_select_screen.dart';
 import 'hero_detail_screen.dart';
 import 'inventory_screen.dart';
 
@@ -55,6 +56,17 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
               position: session.account.currentPosition,
               gold: session.account.gold,
               heroesInCombat: session.combat.activeHeroes.length,
+              // Só oferece a volta a quem já concluiu algo — na primeira
+              // sessão não há para onde voltar (R-M08-11).
+              onTapProgress:
+                  session.account.highestAct > 1 ||
+                      session.account.highestDifficulty > 1
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ActSelectScreen(),
+                      ),
+                    )
+                  : null,
             ),
             _InventoryBar(
               itemCount: loot.inventory.items.length,

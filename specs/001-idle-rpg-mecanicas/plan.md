@@ -153,6 +153,15 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **`HeroCombatant` ganhou os percentuais de item.** `bonusCritChance`, `bonusCritDamage` e `attackSpeedMultiplier` ficam fora de `Stats` porque não são atributo bruto: somar `+8% de crítico` a `attack` faria a mesma peça valer coisas diferentes conforme o slot. `withStats` reaplica tudo preservando a **fração** de HP, que é o que permite equipar no meio da wave sem curar de graça nem matar por diferença de teto (SC-M05-04).
 - **As ações de inventário passam pelo `CombatController`.** Vender credita ouro na conta e equipar reaplica atributos ao combatente; as duas coisas moram lá. `LootController` só cuida do inventário.
 
+**Correções descobertas na implementação de US3:**
+
+- **`CombatDependencies` saiu para `presentation/providers/game_dependencies.dart`.** Combate, loot e waves dependem dela; mantê-la dentro do controlador de combate criava o ciclo `combat → loot → wave → combat`. `combat_providers.dart` reexporta o arquivo novo, então nenhum import existente precisou mudar.
+- **A regra de drop garantido virou `BossDropPolicy`, em `wave_providers.dart`.** Ela é sobre a **wave**, não sobre o item: quem sabe que a wave é de boss é o `WaveDirector`. E exige as duas condições — monstro boss **e** wave múltipla de 10 —, senão um template marcado como boss por engano numa wave comum passaria a conceder loot garantido a cada aparição.
+- **O fator de wave reinicia a cada ato.** `MonsterScaling.waveFactor` usa `wave` (relativa ao ato), não `globalWave`: com a wave acumulada, a wave 1 do Ato 2 nasceria mais forte que o boss final do Ato 1, já que os templates do ato seguinte já têm atributos base maiores. O ato entra por um degrau próprio (`actMultiplier`), para que a fórmula continue crescente mesmo se um template reaparecer num ato posterior.
+- **`WaveDirector.advance` não grava; `applyAdvance` grava.** Separar as duas mantém o motor livre de efeito colateral (I-4) e deixa a preservação de CEN-M08-009 verificável: só posição e recordes são reescritos na conta, e heróis, itens e runas ficam fora do caminho por construção.
+- **A wave ganhou fluxo de RNG próprio (`fork('waves')`).** Sem isso, mudar a quantidade de monstros por wave deslocaria o sorteio de crítico e o de loot.
+- **`spawnWave` deriva o `instanceId` da posição.** Um contador de instância global tornava a composição da wave dependente de quantas waves a sessão já tinha visto — o offline (M09) e o combate ao vivo produziriam IDs diferentes para a mesma wave.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

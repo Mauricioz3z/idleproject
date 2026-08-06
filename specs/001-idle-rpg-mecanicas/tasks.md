@@ -187,20 +187,20 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T074 [P] [US3] Testes de M08 (CEN-M08-001 a 012, E01 a E03) em `test/domain/m08_progression_test.dart`
-- [ ] T075 [P] [US3] Teste de escalonamento por dificuldade em `GameNumber` acima de 1e18, provando ausência de transbordo (`research.md` R6), em `test/domain/m08_scaling_test.dart`
+- [x] T074 [P] [US3] Testes de M08 (CEN-M08-001 a 012, E01 a E03) em `test/domain/m08_progression_test.dart`
+- [x] T075 [P] [US3] Teste de escalonamento por dificuldade em `GameNumber` acima de 1e18, provando ausência de transbordo (`research.md` R6), em `test/domain/m08_scaling_test.dart`
 
 ### Implementation for User Story 3
 
-- [ ] T076 [US3] Implementar `WaveDirector.spawnWave` e `isBossWave` (wave % 10 == 0) em `lib/domain/engines/wave_director.dart`
-- [ ] T077 [US3] Implementar o escalonamento de monstros `baseStats × f(wave, act) × 1.5^(difficulty−1)` em `lib/core/constants/scaling.dart`
-- [ ] T078 [US3] Implementar `WaveDirector.advance` com os resultados `NextWave`, `NextAct` e `DifficultyUnlocked` em `lib/domain/engines/wave_director.dart`
-- [ ] T079 [US3] Implementar o reposicionamento em dificuldade+1 / ato 1 / wave 1 preservando heróis, itens e runas (R-M08-10, CEN-M08-009) em `lib/domain/engines/wave_director.dart`
-- [ ] T080 [US3] Implementar o drop garantido em wave de boss ligando `WaveDirector` a `LootGenerator.rollDrop(guaranteed: true)` em `lib/presentation/providers/wave_providers.dart`
-- [ ] T081 [US3] Implementar a seleção de ato e dificuldade já concluídos, sem regredir recordes (CEN-M08-011), em `lib/presentation/screens/act_select_screen.dart`
-- [ ] T082 [P] [US3] Implementar cenários visuais distintos por ato — Floresta, Caverna, Cidadela — em `lib/presentation/game/components/background_component.dart`
-- [ ] T083 [P] [US3] Implementar a apresentação visual de boss, distinta de monstro comum, em `lib/presentation/game/components/boss_component.dart`
-- [ ] T084 [US3] Implementar o HUD de ato, wave e dificuldade em tela única (SC-M08-02) em `lib/presentation/widgets/progress_hud.dart`
+- [x] T076 [US3] Implementar `WaveDirector.spawnWave` e `isBossWave` (wave % 10 == 0) em `lib/domain/engines/wave_director.dart`
+- [x] T077 [US3] Implementar o escalonamento de monstros `baseStats × f(wave, act) × 1.5^(difficulty−1)` em `lib/core/constants/scaling.dart`
+- [x] T078 [US3] Implementar `WaveDirector.advance` com os resultados `NextWave`, `NextAct` e `DifficultyUnlocked` em `lib/domain/engines/wave_director.dart`
+- [x] T079 [US3] Implementar o reposicionamento em dificuldade+1 / ato 1 / wave 1 preservando heróis, itens e runas (R-M08-10, CEN-M08-009) em `lib/domain/engines/wave_director.dart`
+- [x] T080 [US3] Implementar o drop garantido em wave de boss ligando `WaveDirector` a `LootGenerator.rollDrop(guaranteed: true)` em `lib/presentation/providers/wave_providers.dart`
+- [x] T081 [US3] Implementar a seleção de ato e dificuldade já concluídos, sem regredir recordes (CEN-M08-011), em `lib/presentation/screens/act_select_screen.dart`
+- [x] T082 [P] [US3] Implementar cenários visuais distintos por ato — Floresta, Caverna, Cidadela — em `lib/presentation/game/components/background_component.dart`
+- [x] T083 [P] [US3] Implementar a apresentação visual de boss, distinta de monstro comum, em `lib/presentation/game/components/boss_component.dart`
+- [x] T084 [US3] Implementar o HUD de ato, wave e dificuldade em tela única (SC-M08-02) em `lib/presentation/widgets/progress_hud.dart`
 
 **Checkpoint**: As três stories P1 estão completas. O jogo tem laço de curto, médio e longo prazo.
 

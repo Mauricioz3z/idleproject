@@ -4,17 +4,23 @@ import '../../core/constants/game_enums.dart';
 import '../../core/numeric/game_number.dart';
 import '../../core/rng/rng_stream.dart';
 import '../../domain/engines/combat_engine.dart';
+import '../../domain/engines/wave_director.dart';
 import '../../domain/entities/game_item.dart';
 import '../../domain/entities/hero.dart';
 import '../../domain/entities/hero_class_definition.dart';
 import '../../domain/entities/hero_stats_resolver.dart';
 import '../../domain/entities/monster.dart';
-import '../../domain/entities/monster_template.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
 import '../../domain/progression/formation_slots.dart';
 import '../../domain/progression/progression_service.dart';
+import 'game_dependencies.dart';
 import 'loot_providers.dart';
+import 'wave_providers.dart';
+
+// Reexportado para que quem já importava este arquivo continue enxergando as
+// dependências do jogo sem mudar de import.
+export 'game_dependencies.dart';
 
 /// Estado observável de uma sessão de combate.
 ///
@@ -50,44 +56,24 @@ class CombatSession {
   );
 }
 
-/// Dependências injetáveis do controlador, para permitir teste sem plataforma.
-class CombatDependencies {
-  const CombatDependencies({
-    required this.classes,
-    required this.monsterTemplates,
-    required this.seed,
-    this.onProgressChanged,
-  });
-
-  final List<HeroClassDefinition> classes;
-  final List<MonsterTemplate> monsterTemplates;
-  final int seed;
-
-  /// Notificado quando há progresso digno de gravação. É o gancho do auto-save
-  /// de 30 s (T031) — o controlador não conhece Hive.
-  final void Function()? onProgressChanged;
-}
-
-final combatDependenciesProvider = Provider<CombatDependencies>((ref) {
-  throw UnimplementedError(
-    'Sobrescreva combatDependenciesProvider no ProviderScope com o conteúdo '
-    'carregado do ContentRepository.',
-  );
-});
-
 /// Conduz o combate: avança o motor em passo fixo e converte os eventos do tick
 /// em progresso persistente (T056).
 class CombatController extends Notifier<CombatSession> {
   late final ProgressionService _progression;
   late final CombatEngine _engine;
+  late final WaveDirector _waves;
+  late final RngStream _waveRng;
   late final CombatDependencies _deps;
-  int _monsterCounter = 0;
 
   @override
   CombatSession build() {
     _deps = ref.watch(combatDependenciesProvider);
     _progression = ProgressionService();
     _engine = CombatEngine(rng: RngStream(seed: _deps.seed));
+    _waves = ref.watch(waveDirectorProvider);
+    // Fluxo próprio: a composição da wave não pode deslocar o sorteio de
+    // crítico nem o de loot, que têm os seus (research.md R5).
+    _waveRng = RngStream(seed: _deps.seed).fork('waves');
 
     final account = PlayerAccount.fresh(
       now: DateTime.now(),
@@ -134,14 +120,14 @@ class CombatController extends Notifier<CombatSession> {
     }
 
     if (result.waveCleared) {
-      final next = _advancePosition(account.currentPosition);
-      account = _progression
-          .recordProgress(account, account.currentPosition)
-          .copyWith(currentPosition: next);
+      // T078: quem decide se a wave concluída leva à seguinte, ao ato seguinte
+      // ou a uma dificuldade nova é o `WaveDirector`.
+      final advance = _waves.advance(account.currentPosition, account);
+      account = WaveDirector.applyAdvance(account, advance);
       _deps.onProgressChanged?.call();
 
       state = state.copyWith(
-        combat: _startWave(next, heroes),
+        combat: _startWave(advance.position, heroes),
         account: account,
         heroes: heroes,
         lastEvents: result,
@@ -216,50 +202,12 @@ class CombatController extends Notifier<CombatSession> {
     equipped: ref.read(lootControllerProvider.notifier).equippedOf(hero),
   );
 
-  /// Geração provisória de wave. `WaveDirector` (T076, US3) assume esta
-  /// responsabilidade com escalonamento completo por wave e dificuldade.
-  List<Monster> _spawnFor(ProgressPosition position) {
-    final doAto = _deps.monsterTemplates
-        .where((m) => m.act == position.act)
-        .toList();
-    if (doAto.isEmpty) return const [];
-
-    final boss = doAto.where((m) => m.isBoss).toList();
-    final comuns = doAto.where((m) => !m.isBoss).toList();
-
-    if (position.isBossWave && boss.isNotEmpty) {
-      return [
-        Monster.spawn(
-          instanceId: 'm${_monsterCounter++}',
-          template: boss.first,
-          stats: boss.first.baseStats,
-          slot: 0,
-        ),
-      ];
-    }
-
-    final quantidade = 2 + (position.wave % 3);
-    return [
-      for (var i = 0; i < quantidade; i++)
-        Monster.spawn(
-          instanceId: 'm${_monsterCounter++}',
-          template: comuns[i % comuns.length],
-          stats: comuns[i % comuns.length].baseStats,
-          slot: i,
-        ),
-    ];
-  }
-
-  ProgressPosition _advancePosition(ProgressPosition current) {
-    if (current.wave < ProgressPosition.maxWave) {
-      return current.copyWith(wave: current.wave + 1);
-    }
-    if (current.act < ProgressPosition.maxAct) {
-      return current.copyWith(act: current.act + 1, wave: 1);
-    }
-    // Dificuldade seguinte é responsabilidade de WaveDirector (T078, US3).
-    return current.copyWith(difficulty: current.difficulty + 1, act: 1, wave: 1);
-  }
+  /// Monstros da wave, escalados por wave, ato e dificuldade (T076).
+  ///
+  /// O `instanceId` sai do próprio `WaveDirector` e é derivado da posição, o
+  /// que mantém a composição da wave reproduzível a partir do save.
+  List<Monster> _spawnFor(ProgressPosition position) =>
+      _waves.spawnWave(position, _waveRng);
 
   /// Reavalia o 4º slot após subida de nível de conta. Único caminho
   /// autorizado a alterar `formationSlots` (V-PA-02).
@@ -268,6 +216,22 @@ class CombatController extends Notifier<CombatSession> {
     if (result is! SlotNoChange) {
       state = state.copyWith(account: result.account);
     }
+  }
+
+  /// Move o jogador para um ato e dificuldade já concluídos (R-M08-11,
+  /// CEN-M08-011).
+  ///
+  /// Recusa silenciosamente conteúdo não desbloqueado — a tela só oferece o que
+  /// [WaveDirector.canSelect] aprova, e a checagem aqui é a que vale.
+  void selectPosition(ProgressPosition target) {
+    final account = WaveDirector.select(state.account, target);
+    if (account.currentPosition == state.account.currentPosition) return;
+
+    state = state.copyWith(
+      account: account,
+      combat: _startWave(account.currentPosition, state.heroes),
+    );
+    _deps.onProgressChanged?.call();
   }
 
   // ------------------------------------------------------------- inventário

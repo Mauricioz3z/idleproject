@@ -11,7 +11,8 @@ import '../../domain/entities/hero.dart';
 import '../../domain/entities/inventory.dart';
 import '../../domain/entities/progress_position.dart';
 import '../../domain/inventory/inventory_service.dart';
-import 'combat_providers.dart';
+import 'game_dependencies.dart';
+import 'wave_providers.dart';
 
 /// Serviço de inventário compartilhado.
 ///
@@ -103,6 +104,7 @@ class LootOutcome {
 class LootController extends Notifier<LootState> {
   late final LootGenerator _generator;
   late final InventoryService _inventory;
+  late final BossDropPolicy _bossDrops;
   late final RngStream _rng;
 
   @override
@@ -110,6 +112,7 @@ class LootController extends Notifier<LootState> {
     final deps = ref.watch(combatDependenciesProvider);
     _generator = ref.watch(lootGeneratorProvider);
     _inventory = ref.watch(inventoryServiceProvider);
+    _bossDrops = ref.watch(bossDropPolicyProvider);
     // Fluxo próprio, forkado uma vez: o loot não pode se deslocar quando o
     // combate consome um sorteio a mais de crítico (research.md R5).
     _rng = RngStream(seed: deps.seed).fork('loot');
@@ -138,8 +141,10 @@ class LootController extends Notifier<LootState> {
         monster: template,
         position: position,
         rng: _rng,
-        // Boss concede item independentemente do sorteio (R-M04-11).
-        guaranteed: defeat.monster.isBoss,
+        // Boss de wave de boss concede item independentemente do sorteio
+        // (R-M04-11, CEN-M08-003) — a regra é de wave, e vive em
+        // `BossDropPolicy`.
+        guaranteed: _bossDrops.isGuaranteed(position, defeat.monster),
         now: now,
       );
 

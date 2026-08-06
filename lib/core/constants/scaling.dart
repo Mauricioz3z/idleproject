@@ -1,4 +1,6 @@
 import '../../domain/entities/progress_position.dart';
+import '../../domain/entities/stats.dart';
+import '../numeric/game_number.dart';
 
 /// Curvas de escalonamento de item (M04, M08).
 ///
@@ -48,4 +50,47 @@ abstract final class ItemScaling {
   /// Variância multiplicativa do atributo base, para que dois itens iguais no
   /// papel não sejam idênticos na prática.
   static const double baseStatVariance = 0.15;
+}
+
+/// Escalonamento dos monstros: `baseStats × f(wave, act) × 1,5^(difficulty−1)`
+/// (R-M08-06, R-M08-08).
+abstract final class MonsterScaling {
+  /// Multiplicador por degrau de dificuldade (R-M08-08). Cumulativo em relação
+  /// à dificuldade imediatamente anterior, e **sem teto** (R-M08-09) — é
+  /// exatamente esse crescimento que obriga o uso de [GameNumber] em vez de
+  /// `int`, porque ele estoura `int64` por volta da dificuldade 108
+  /// (research.md R6).
+  static const double difficultyMultiplier = 1.5;
+
+  /// Crescimento por wave dentro do ato.
+  static const double waveGrowth = 0.05;
+
+  /// Degrau adicional por ato, sobre o mesmo template.
+  ///
+  /// A maior parte da diferença entre atos vem dos próprios templates, que têm
+  /// atributos base distintos. Este fator existe para que a fórmula continue
+  /// crescente mesmo quando um template reaparece num ato posterior.
+  static const double actMultiplier = 1.25;
+
+  /// Fator de wave e ato. Reinicia a cada ato de propósito: a wave é relativa
+  /// ao ato (V-PP-04), e usar a wave acumulada faria a wave 1 do Ato 2 nascer
+  /// mais forte que o boss final do Ato 1.
+  static GameNumber waveFactor(ProgressPosition position) {
+    var factor = 1.0 + waveGrowth * (position.wave - 1);
+    for (var i = 1; i < position.act; i++) {
+      factor *= actMultiplier;
+    }
+    return GameNumber.fromDouble(factor);
+  }
+
+  /// `1,5^(difficulty−1)`, em [GameNumber] para sobreviver a dificuldades
+  /// arbitrariamente altas.
+  static GameNumber difficultyFactor(ProgressPosition position) =>
+      GameNumber.fromDouble(difficultyMultiplier).pow(position.difficulty - 1);
+
+  /// Atributos efetivos de um monstro na posição dada.
+  static Stats statsFor({
+    required Stats base,
+    required ProgressPosition position,
+  }) => base.scaledBy(waveFactor(position) * difficultyFactor(position));
 }
