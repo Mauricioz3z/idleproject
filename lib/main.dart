@@ -13,6 +13,7 @@ import 'presentation/providers/combat_providers.dart';
 import 'presentation/providers/notification_providers.dart';
 import 'presentation/providers/offline_providers.dart';
 import 'presentation/providers/rune_providers.dart';
+import 'services/analytics_service.dart';
 import 'services/background_worker.dart';
 import 'services/home_widget_service.dart';
 import 'services/save_scheduler.dart';
@@ -50,10 +51,16 @@ Future<void> main() async {
     // metade da progressão faltando.
   );
 
+  // Telemetria antes do resto: é ela que registra falha de save e reparo de
+  // desserialização, os dois eventos que ninguém descobre em campo sem ela.
+  final analytics = AnalyticsService();
+  await analytics.initialize();
+
   final repository = HiveSaveRepository(
     metaBox: Hive.box<dynamic>(Boxes.meta),
     saveBox: Hive.box<dynamic>(Boxes.account),
     knownRuneNodeIds: {for (final n in content.runeTree().nodes) n.id},
+    onRepairs: analytics.recordSaveRepairs,
   );
 
   // A semente vem do save quando existe: o fluxo determinístico precisa
@@ -74,6 +81,7 @@ Future<void> main() async {
       ),
       saveRepositoryProvider.overrideWithValue(repository),
       runeTreeProvider.overrideWithValue(content.runeTree()),
+      analyticsProvider.overrideWithValue(analytics),
     ],
   );
 
@@ -87,6 +95,10 @@ Future<void> main() async {
           now: clock.now(),
           monotonicMillis: clock.monotonicMillis(),
         ),
+    // CEN-M10-E02: a gravação falhou, o jogo continua, e o evento fica
+    // registrado — é assim que disco cheio em campo deixa de ser invisível.
+    onError: (error) =>
+        analytics.recordSaveFailure(repository.lastOutcome, error),
   )..start();
 
   // M11: notificações, widget e tarefas periódicas. Nenhuma delas é

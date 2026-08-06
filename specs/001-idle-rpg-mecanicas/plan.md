@@ -200,6 +200,13 @@ O segundo é `core/numeric/` e `core/rng/`, exigidos pelos achados R6 e R5 da pe
 - **Restauração ignora consumíveis.** Recreditar gemas a cada restauração transformaria reinstalar o app numa torneira de moeda. `PurchaseId.isConsumable` marca a fronteira.
 - **`APPLICATION_ID` do AdMob no manifesto.** Sem ele o app **não falha no build — falha ao abrir**; o SDK lança na inicialização. É o tipo de erro que passa por todo o CI e aparece no primeiro aparelho real. Verificado no manifesto mesclado, junto da ausência de `SCHEDULE_EXACT_ALARM`, que nenhum plugin arrastou.
 
+**Correções descobertas na Fase 10 (Polish):**
+
+- **A revisão de formatação (T147) achou um defeito real.** O rótulo de multiplicador da tela de seleção de ato acumulava `1,5^(dificuldade−1)` em `double`: na dificuldade 200 vazava notação científica crua para a tela (`1.1019466071921387e+35`) e por volta da 1750 virava `Infinity`. É o mesmo motivo pelo qual o jogo usa `GameNumber` — e não adianta usá-lo no domínio se a tela converte para `double` antes de exibir. Corrigido e travado por teste que compara o cálculo antigo com o atual.
+- **Gravação malsucedida agora descarta o documento pendente.** Sem isso, disco cheio piorava a cada tentativa: o pendente parcial continuava ocupando espaço e o auto-save de 30 s tentava de novo com menos espaço do que antes. O commit anterior nunca é tocado, então a limpeza é sempre segura (CEN-M10-007).
+- **`onError` do `SaveScheduler` e `onRepairs` do repositório estavam sem destino.** Os dois ganchos existiam desde a Fase 2 e ninguém os ligava — falha de gravação e reparo de desserialização aconteciam em silêncio. Agora vão para o `AnalyticsService`, que é o que torna esses eventos visíveis em campo.
+- **APK release medido**: 18,6 / 21,0 / 22,4 MB por ABI, contra o teto de 30 MB de `specification.md` §8. Com a arte final (T143) a margem encolhe, e é aí que a conversão para WebP de T145 passa a importar.
+
 ## Complexity Tracking
 
 > Sem violações a justificar — não há princípios constitucionais ratificados. Tabela intencionalmente vazia.

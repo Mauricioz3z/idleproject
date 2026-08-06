@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/scaling.dart';
+import '../../core/numeric/number_format.dart';
 import '../../domain/engines/wave_director.dart';
 import '../../domain/entities/player_account.dart';
 import '../../domain/entities/progress_position.dart';
@@ -121,16 +123,18 @@ class _DifficultyBlock extends ConsumerWidget {
     );
   }
 
-  /// Multiplicador acumulado desta dificuldade, arredondado para leitura.
-  String _scaleLabel() {
-    var factor = 1.0;
-    for (var i = 1; i < difficulty; i++) {
-      factor *= 1.5;
-    }
-    return factor >= 100
-        ? factor.toStringAsFixed(0)
-        : factor.toStringAsFixed(1);
-  }
+  /// Multiplicador acumulado desta dificuldade.
+  ///
+  /// Em [GameNumber], não em `double`: o fator é `1,5^(dificuldade−1)`, sem teto
+  /// (R-M08-09). Acumulado em `double`, ele vira `Infinity` por volta da
+  /// dificuldade 1750 — e muito antes disso já imprimia uma parede de dígitos.
+  /// A mesma razão pela qual o jogo inteiro usa `GameNumber` vale para o rótulo
+  /// que exibe o número (research.md R6, T147).
+  String _scaleLabel() => NumberFormat.compact(
+    MonsterScaling.difficultyFactor(
+      ProgressPosition(difficulty: difficulty, act: 1, wave: 1),
+    ),
+  );
 }
 
 class _ActTile extends StatelessWidget {

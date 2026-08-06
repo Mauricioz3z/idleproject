@@ -331,16 +331,38 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T142 [P] Integrar Firebase Analytics e Crashlytics em `lib/services/analytics_service.dart`
+- [x] T142 [P] Integrar Firebase Analytics e Crashlytics em `lib/services/analytics_service.dart`
 - [ ] T143 [P] Substituir sprites placeholder por pixel art final em `assets/sprites/`, em sprite sheets únicos por classe e por tipo de monstro
 - [ ] T144 Perfilar com `flutter run --profile` no aparelho de referência de [plan.md](plan.md) e garantir 30 FPS sustentados com 4 heróis e 8 monstros, ajustando `lib/presentation/game/idle_rpg_game.dart` conforme necessário
 - [ ] T145 Converter `assets/sprites/` para WebP e verificar APK release < 30 MB por ABI via `flutter build apk --release --split-per-abi`
-- [ ] T146 [P] Implementar tratamento de armazenamento cheio na gravação (CEN-M10-E02) em `lib/data/repositories/hive_save_repository.dart`
-- [ ] T147 [P] Revisar formatação de números grandes em todas as telas usando `lib/core/numeric/number_format.dart`
+- [x] T146 [P] Implementar tratamento de armazenamento cheio na gravação (CEN-M10-E02) em `lib/data/repositories/hive_save_repository.dart`
+- [x] T147 [P] Revisar formatação de números grandes em todas as telas usando `lib/core/numeric/number_format.dart`
 - [ ] T148 Executar a validação manual V1 a V7 de [quickstart.md](quickstart.md) §4, incluindo a contagem de interações para equipar um item (SC-007) e a travessia da wave 1 à 100 do Ato 1 sem decisão obrigatória (SC-008)
-- [ ] T149 Executar as verificações de determinismo de [quickstart.md](quickstart.md) §5
-- [ ] T150 Rodar `flutter analyze` e zerar todos os avisos em `lib/` e `test/`, respeitando as regras de `analysis_options.yaml`
-- [ ] T151 Percorrer o checklist anti-plágio de `specification.md` §9 antes de qualquer publicação
+- [x] T149 Executar as verificações de determinismo de [quickstart.md](quickstart.md) §5
+- [x] T150 Rodar `flutter analyze` e zerar todos os avisos em `lib/` e `test/`, respeitando as regras de `analysis_options.yaml`
+- [x] T151 Percorrer o checklist anti-plágio de `specification.md` §9 antes de qualquer publicação — resultado em [checklists/pre-launch.md](checklists/pre-launch.md)
+
+### Tarefas bloqueadas por material ou hardware inexistente
+
+As quatro acima que seguem sem marca **não foram esquecidas** — nenhuma delas é
+executável a partir do repositório:
+
+- **T143** exige a pixel art final. `assets/sprites/` está vazio; a apresentação
+  atual é desenhada em código, conforme `specification.md` §6 Fase 1 prescreve
+  para validar o laço antes de investir em arte.
+- **T144** exige o **aparelho de referência** de [plan.md](plan.md) (4 GB, SoC de
+  entrada, Android 10). Medir FPS na máquina de desenvolvimento e declarar
+  aprovado é exatamente o que `quickstart.md` §1 proíbe.
+- **T145** tem duas metades. A verificação de tamanho **foi executada**:
+  `flutter build apk --release --split-per-abi` produziu 18,6 MB (armeabi-v7a),
+  21,0 MB (arm64-v8a) e 22,4 MB (x86_64) — todas abaixo do teto de 30 MB. A
+  conversão para WebP depende de T143: não há sprite para converter.
+- **T148** é validação manual em dispositivo (V1 a V7 de
+  [quickstart.md](quickstart.md) §4), incluindo a contagem de toques de SC-007 e
+  a travessia de SC-008. Exige um humano com o jogo na mão.
+
+Também segue pendente `integration_test/m11_widget_test.dart` (T098), que precisa
+de aparelho ou emulador conectado.
 
 ---
 

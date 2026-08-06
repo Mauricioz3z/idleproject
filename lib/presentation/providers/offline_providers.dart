@@ -7,6 +7,7 @@ import '../../domain/engines/offline_simulator.dart';
 import '../../domain/entities/offline_report.dart';
 import '../../domain/entities/save_state.dart';
 import '../../domain/ports/save_repository.dart';
+import '../../services/analytics_service.dart';
 import '../../services/clock_guard.dart';
 import 'combat_providers.dart';
 import 'wave_providers.dart';
@@ -22,11 +23,17 @@ final offlineSimulatorProvider = Provider<OfflineSimulator>(
   (ref) => const OfflineSimulator(),
 );
 
+final analyticsProvider = Provider<AnalyticsService>(
+  (ref) => AnalyticsService(),
+);
+
 final clockGuardProvider = Provider<ClockGuard>(
   (ref) => ClockGuard(
     clock: ref.watch(clockProvider),
-    // T142 liga isto ao Analytics. O evento é observação, não punição.
-    onAnomaly: (anomaly, data) {},
+    // Observação, não punição: o teto de 8 h já neutraliza o ganho, e fuso
+    // horário produz o mesmo sinal que manipulação (research.md R7).
+    onAnomaly: (anomaly, data) =>
+        ref.read(analyticsProvider).recordClockAnomaly(anomaly, data),
   ),
 );
 
@@ -136,6 +143,14 @@ class OfflineController extends Notifier<OfflineState> {
     );
 
     ref.read(combatControllerProvider.notifier).restore(simulation.state);
+
+    if (!simulation.report.isEmpty) {
+      ref.read(analyticsProvider).recordOfflineReturn(
+        elapsedSeconds: simulation.report.elapsedSeconds,
+        wasCapped: simulation.report.wasCapped,
+        wavesAdvanced: simulation.report.wavesAdvanced,
+      );
+    }
 
     state = state.copyWith(
       // Relatório vazio não vira tela: o jogador que fechou o app por dez

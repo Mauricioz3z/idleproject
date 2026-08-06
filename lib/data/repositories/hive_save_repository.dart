@@ -82,7 +82,28 @@ class HiveSaveRepository implements SaveRepository {
     } on Object catch (e) {
       // O commit anterior permanece íntegro — é o ponto do protocolo.
       lastOutcome = _classify(e);
+      await _discardPending();
       rethrow;
+    }
+  }
+
+  /// Descarta o documento pendente depois de uma gravação malsucedida.
+  ///
+  /// Sem isto, um disco cheio fica **pior a cada tentativa**: o pendente
+  /// parcial continua ocupando espaço, e o auto-save de 30 s tenta de novo com
+  /// menos espaço do que tinha antes. O commit anterior nunca é tocado — é ele
+  /// que sustenta CEN-M10-007 —, então limpar o pendente é sempre seguro.
+  ///
+  /// A limpeza também pode falhar, e falhar aqui não pode escalar: o erro que
+  /// interessa ao jogador é o da gravação, não o da faxina.
+  Future<void> _discardPending() async {
+    try {
+      if (_box.containsKey(_pendingKey)) {
+        await _box.delete(_pendingKey);
+        await _box.flush();
+      }
+    } on Object {
+      // Espaço insuficiente até para apagar. Nada mais a fazer aqui.
     }
   }
 
