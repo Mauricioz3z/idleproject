@@ -11,6 +11,7 @@ class CombatantAnimations {
     required this.attack,
     required this.death,
     required this.walk,
+    required this.hasWalkRow,
   });
 
   final SpriteAnimation idle;
@@ -29,6 +30,13 @@ class CombatantAnimations {
   /// idle aqui. A arena compensa com o balanço vertical e o cenário rolando, o
   /// que já lê como andar — é o que mantém a arte entregável em levas.
   final SpriteAnimation walk;
+
+  /// Se [walk] é a linha 3 de verdade ou o idle repetido.
+  ///
+  /// A arena precisa saber: o balanço vertical de compensação só pode entrar
+  /// quando não há caminhada desenhada. Somado a uma passada de verdade, o
+  /// corpo saltaria duas vezes por passo.
+  final bool hasWalkRow;
 }
 
 /// Carrega os sprites de `assets/sprites/` conforme
@@ -132,6 +140,7 @@ class SpriteCatalog {
       death: row(2, loop: false),
       // Linha 3 quando entregue; idle quando a folha ainda tem 3 linhas.
       walk: rows >= 4 ? row(3, loop: true) : idle,
+      hasWalkRow: rows >= 4,
     );
     _combatants[path] = animations;
     return animations;
