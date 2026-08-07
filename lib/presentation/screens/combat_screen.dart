@@ -54,7 +54,11 @@ class _CombatScreenState extends ConsumerState<CombatScreen> {
     }
 
     // Empurra o estado mais recente para a arena a cada rebuild.
-    _arena.sync(session.combat, session.lastEvents);
+    _arena.sync(
+      session.combat,
+      session.lastEvents,
+      travelProgress: session.travelProgress,
+    );
 
     // Um lote novo de drops vira popup uma única vez. Comparar o contador, e
     // não a lista, evita repetir o aviso a cada rebuild da tela.

@@ -250,6 +250,19 @@ class CombatEngine {
   /// Tempo de revive automático (R-M01-06).
   static const double reviveSeconds = 30;
 
+  /// Segundos de caminhada entre uma wave e a seguinte (R-M08-13).
+  ///
+  /// O time anda até o próximo grupo em vez de o grupo aparecer parado na
+  /// frente dele. É tempo de jogo de verdade: o combate não corre enquanto a
+  /// caminhada dura, e quem consome esta constante são **dois** pontos — o tick
+  /// ao vivo e a simulação offline. Se só um pagasse, a mesma hora de jogo
+  /// renderia waves diferentes com o app aberto e fechado, que é a divergência
+  /// que research.md R3 existe para impedir.
+  ///
+  /// Fora de [timeToClearWave] de propósito: aquela função responde "quanto
+  /// tempo para limpar **esta** wave", e a caminhada vem depois de limpá-la.
+  static const double travelSeconds = 1;
+
   final RngStream _rng;
 
   /// Bônus de runa em vigor (R-M07-06).

@@ -98,6 +98,24 @@ void main() {
     // `contracts/assets-sprites.md` pega uma folha entregue no tamanho de outra.
     await real(tester, SpriteCatalog.load);
 
+    /// Folha de personagem: 4 colunas do quadro, e 3 ou 4 linhas — a 4ª é a
+    /// caminhada de R-M08-13, opcional por contrato.
+    Future<void> expectSheet(String path, int frameW, int frameH) async {
+      final image = await real(tester, () => Flame.images.load('sprites/$path'));
+      expect(
+        image.width,
+        frameW * 4,
+        reason: 'sprites/$path não tem as 4 colunas do contrato',
+      );
+      expect(
+        image.height,
+        anyOf(frameH * 3, frameH * 4),
+        reason:
+            'sprites/$path tem ${image.height} px de altura: esperado '
+            '${frameH * 3} (sem caminhada) ou ${frameH * 4} (com)',
+      );
+    }
+
     Future<void> expectSize(String path, int w, int h) async {
       final image = await real(tester, () => Flame.images.load('sprites/$path'));
       expect(
@@ -114,17 +132,14 @@ void main() {
       requireFullRuneTree: false,
     );
 
-    // Heróis: quadro 16×24 na grade 4×3.
+    // Heróis: quadro 16×24.
     for (final hero in content.heroClasses()) {
-      await expectSize('heroes/${hero.id}.png', 64, 72);
+      await expectSheet('heroes/${hero.id}.png', 16, 24);
     }
     // Monstros: 16×16 comuns, 32×32 bosses.
     for (final monster in content.monsters()) {
-      await expectSize(
-        'monsters/${monster.id}.png',
-        monster.isBoss ? 128 : 64,
-        monster.isBoss ? 96 : 48,
-      );
+      final frame = monster.isBoss ? 32 : 16;
+      await expectSheet('monsters/${monster.id}.png', frame, frame);
     }
     // Ícones de item e cenários de ato.
     for (final slot in const [

@@ -69,9 +69,14 @@ class CombatantComponent extends PositionComponent {
         _playingOneShot = false;
         sprite.animation = animations.death.clone();
       }
-    } else if (!_playingOneShot && sprite.animation == animations.death) {
-      sprite.animation = animations.idle;
+      return;
     }
+
+    if (_playingOneShot) return;
+
+    // Caminhada e idle disputam o mesmo lugar; o golpe em curso vence os dois.
+    final wanted = isWalking ? animations.walk : animations.idle;
+    if (sprite.animation != wanted) sprite.animation = wanted;
   }
 
   /// ID do herói ou do monstro que este componente representa.
@@ -84,8 +89,28 @@ class CombatantComponent extends PositionComponent {
   /// Incapacitado ou morto: desenhado esmaecido, sem barra.
   bool isDown = false;
 
+  /// Andando até o grupo seguinte (R-M08-13).
+  ///
+  /// Com a linha 3 da folha entregue, troca a animação. Sem ela, o passo é o
+  /// balanço vertical de [_walkBobPixels] — que somado ao cenário rolando lê
+  /// como caminhada mesmo com quadros de idle.
+  bool isWalking = false;
+
   /// Segundos restantes do flash de dano.
   double _hitFlash = 0;
+
+  /// Fase do balanço de caminhada, em segundos.
+  double _walkPhase = 0;
+
+  static const double _walkBobPixels = 1;
+  static const double _walkStepsPerSecond = 4;
+
+  /// Deslocamento vertical do passo, em pixels. Inteiro de propósito: meio pixel
+  /// em pixel art tremula.
+  double get _walkBob {
+    if (!isWalking || isDown) return 0;
+    return (_walkPhase * _walkStepsPerSecond) % 2 < 1 ? -_walkBobPixels : 0;
+  }
 
   static const double _barHeight = 3;
   static const double _barGap = 4;
@@ -97,15 +122,21 @@ class CombatantComponent extends PositionComponent {
   void update(double dt) {
     super.update(dt);
     if (_hitFlash > 0) _hitFlash -= dt;
+    if (isWalking) _walkPhase += dt;
     _syncDownState();
 
     // A piscada de dano é efeito de código sobre o sprite, e não arte: o
     // contrato de assets é explícito em não pedir quadros de "hit".
     _sprite?.opacity = isDown ? 0.6 : 1.0;
+    _sprite?.position.y = _walkBob;
   }
 
   @override
   void render(Canvas canvas) {
+    // O balanço do passo move o corpo, e só ele. A barra de vida fica onde
+    // está: barra subindo e descendo com o passo lê como dano recebido.
+    canvas.save();
+    canvas.translate(0, _walkBob);
     if (!hasSprite) {
       final body = Paint()
         ..color = _hitFlash > 0
@@ -118,6 +149,7 @@ class CombatantComponent extends PositionComponent {
         Paint()..color = const Color(0x66FFFFFF),
       );
     }
+    canvas.restore();
 
     if (isDown) return;
 

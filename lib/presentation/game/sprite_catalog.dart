@@ -4,12 +4,13 @@ import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/foundation.dart';
 
-/// Animações de uma entidade, conforme a grade 4×3 do contrato de assets.
+/// Animações de uma entidade, conforme a grade do contrato de assets.
 class CombatantAnimations {
   const CombatantAnimations({
     required this.idle,
     required this.attack,
     required this.death,
+    required this.walk,
   });
 
   final SpriteAnimation idle;
@@ -21,6 +22,13 @@ class CombatantAnimations {
   /// Toca uma vez e **congela no último quadro** — ele fica na tela os 30 s do
   /// revive (R-M01-06), então precisa ser legível parado.
   final SpriteAnimation death;
+
+  /// Caminhada entre waves (R-M08-13), linha 3 da folha.
+  ///
+  /// É a única linha **opcional**: folha de 3 linhas continua válida e cai no
+  /// idle aqui. A arena compensa com o balanço vertical e o cenário rolando, o
+  /// que já lê como andar — é o que mantém a arte entregável em levas.
+  final SpriteAnimation walk;
 }
 
 /// Carrega os sprites de `assets/sprites/` conforme
@@ -84,6 +92,26 @@ class SpriteCatalog {
       return null;
     }
 
+    // Folha no tamanho errado é recusada aqui.
+    //
+    // `SpriteAnimation.fromFrameData` **não** valida se a grade cabe na imagem:
+    // pedir quadros de 32×32 numa folha de 64×48 devolve recortes fora dos
+    // limites, sem exceção e sem aviso — desenha lixo ou nada. Já custou um
+    // teste verde que afirmava o contrário do conteúdo do jogo.
+    final rows = image.height ~/ frameHeight;
+    if (image.width < _columns * frameWidth || rows < 3) {
+      if (kDebugMode) {
+        debugPrint(
+          'folha fora do contrato (usando retângulo): sprites/$path é '
+          '${image.width}×${image.height}, esperado ao menos '
+          '${_columns * frameWidth}×${frameHeight * 3} para quadros de '
+          '$frameWidth×$frameHeight',
+        );
+      }
+      _combatants[path] = null;
+      return null;
+    }
+
     final size = Vector2(frameWidth.toDouble(), frameHeight.toDouble());
     SpriteAnimation row(int index, {required bool loop}) =>
         SpriteAnimation.fromFrameData(
@@ -97,10 +125,13 @@ class SpriteCatalog {
           ),
         );
 
+    final idle = row(0, loop: true);
     final animations = CombatantAnimations(
-      idle: row(0, loop: true),
+      idle: idle,
       attack: row(1, loop: false),
       death: row(2, loop: false),
+      // Linha 3 quando entregue; idle quando a folha ainda tem 3 linhas.
+      walk: rows >= 4 ? row(3, loop: true) : idle,
     );
     _combatants[path] = animations;
     return animations;

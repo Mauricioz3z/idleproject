@@ -41,6 +41,7 @@ class CombatSession {
     required this.account,
     required this.heroes,
     required this.lastEvents,
+    this.travelRemaining = 0,
     this.entitlements = const Entitlements(
       adsRemoved: false,
       ownedDlcClassIds: {},
@@ -63,17 +64,40 @@ class CombatSession {
   /// números flutuantes e popups.
   final CombatTickResult? lastEvents;
 
+  /// Segundos restantes da caminhada até o grupo seguinte (R-M08-13). Zero
+  /// significa "em combate".
+  ///
+  /// Os monstros da wave nova já existem enquanto isto corre: eles entram pela
+  /// direita enquanto o time anda, e o combate só começa quando chegam. É por
+  /// isso que a fase congela o motor em vez de adiar o spawn — a arena precisa
+  /// de alguém para fazer entrar.
+  final double travelRemaining;
+
+  bool get isTraveling => travelRemaining > 0;
+
+  /// Andamento da caminhada, de 0 (acabou de sair) a 1 (chegou).
+  double get travelProgress => travelRemaining <= 0
+      ? 1
+      : (1 - travelRemaining / CombatEngine.travelSeconds).clamp(0.0, 1.0);
+
   CombatSession copyWith({
     CombatState? combat,
     PlayerAccount? account,
     List<Hero>? heroes,
     CombatTickResult? lastEvents,
+    // Necessário porque `lastEvents` é anulável: passar `null` no parâmetro
+    // acima significa "não mexe", e a fase de caminhada precisa de "esquece os
+    // eventos" — senão a arena repetiria os números de dano do último golpe a
+    // cada quadro da caminhada.
+    bool clearEvents = false,
+    double? travelRemaining,
     Entitlements? entitlements,
   }) => CombatSession(
     combat: combat ?? this.combat,
     account: account ?? this.account,
     heroes: heroes ?? this.heroes,
-    lastEvents: lastEvents ?? this.lastEvents,
+    lastEvents: clearEvents ? null : (lastEvents ?? this.lastEvents),
+    travelRemaining: travelRemaining ?? this.travelRemaining,
     entitlements: entitlements ?? this.entitlements,
   );
 }
@@ -121,6 +145,22 @@ class CombatController extends Notifier<CombatSession> {
   /// Avança um passo fixo. Chamado pelo acumulador de [IdleRpgGame], nunca com
   /// o `dt` bruto do render (research.md R10).
   void tick(double fixedDt) {
+    // Caminhando: o motor não anda (R-M08-13). A taxa de ouro continua sendo
+    // medida, com zero de ganho — é o que mantém o número do widget e o cálculo
+    // offline no ritmo real do jogo, e não no ritmo só das lutas.
+    if (state.isTraveling) {
+      final remaining = state.travelRemaining - fixedDt;
+      _goldRate.record(GameNumber.zero, fixedDt);
+      state = state.copyWith(
+        account: state.account.copyWith(
+          goldPerSecond: _goldRate.ratePerSecond,
+        ),
+        travelRemaining: remaining <= 0 ? 0 : remaining,
+        clearEvents: true,
+      );
+      return;
+    }
+
     final result = _engine.tick(state.combat, fixedDt);
 
     var account = state.account;
@@ -173,11 +213,14 @@ class CombatController extends Notifier<CombatSession> {
       account = WaveDirector.applyAdvance(account, advance);
       _deps.onProgressChanged?.call();
 
+      // Os monstros novos já nascem aqui, mas o combate espera a caminhada
+      // acabar: é ela que os traz para a tela (R-M08-13).
       state = state.copyWith(
         combat: _startWave(advance.position, heroes),
         account: account,
         heroes: heroes,
         lastEvents: result,
+        travelRemaining: CombatEngine.travelSeconds,
       );
       return;
     }

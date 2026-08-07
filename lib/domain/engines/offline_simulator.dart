@@ -273,7 +273,11 @@ class OfflineSimulator {
       // equipamento melhor.
       if (timeToClear == null) break;
 
-      final cost = timeToClear.inMilliseconds / 1000.0;
+      // A caminhada até o grupo seguinte custa o mesmo aqui e no jogo aberto
+      // (R-M08-13). Cobrar só no tick ao vivo faria o resumo offline prometer
+      // waves que a sessão aberta não entrega.
+      final cost =
+          timeToClear.inMilliseconds / 1000.0 + CombatEngine.travelSeconds;
       if (cost <= 0 || cost > remaining) break;
       remaining -= cost;
 

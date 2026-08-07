@@ -71,6 +71,22 @@ class BackgroundComponent extends PositionComponent {
   /// Imagem do ato, quando entregue. Sem ela, o cenário é desenhado.
   Sprite? sprite;
 
+  /// Deslocamento horizontal da rolagem, em pixels de arte.
+  ///
+  /// Cresce enquanto o time caminha (R-M08-13) e é o que faz o cenário passar
+  /// em vez de ficar parado. Nunca é zerado: o mundo dá a volta em [_wrapWidth].
+  double scrollX = 0;
+
+  /// A arte volta ao início a cada duas larguras porque a cópia ímpar é
+  /// **espelhada**.
+  ///
+  /// Repetir a mesma imagem lado a lado deixaria uma costura visível a cada
+  /// 320 px, já que os cenários não são desenhados para encaixar borda com
+  /// borda. Espelhando, a borda encontra a si mesma e a emenda desaparece —
+  /// truque velho, e o único que funciona com arte que não foi feita para
+  /// repetir.
+  double get _wrapWidth => artWidth * 2;
+
   /// Resolução nativa dos cenários de `assets/sprites/backgrounds/`, igual à de
   /// `tool/backgrounds.py`. Tudo aqui é desenhado nessas coordenadas e escalado
   /// de uma vez, então a arte e o traçado de reserva têm a mesma geometria.
@@ -118,13 +134,22 @@ class BackgroundComponent extends PositionComponent {
     // inteiro — inclusive as silhuetas, que existem só como substituto.
     final image = sprite;
     if (image != null) {
-      image.render(canvas, size: Vector2(artWidth, artHeight));
+      _renderScrolling(canvas, (offset, mirrored) {
+        _copy(canvas, offset, mirrored, () {
+          image.render(canvas, size: Vector2(artWidth, artHeight));
+        });
+      });
       canvas.restore();
       return;
     }
 
+    // As silhuetas rolam junto; a faixa de chão é lisa e não precisa.
     const groundTop = artHeight - groundHeight;
-    _renderSilhouettes(canvas, artWidth, groundTop);
+    _renderScrolling(canvas, (offset, mirrored) {
+      _copy(canvas, offset, mirrored, () {
+        _renderSilhouettes(canvas, artWidth, groundTop);
+      });
+    });
 
     canvas.drawRect(
       const Rect.fromLTWH(0, groundTop, artWidth, groundHeight),
@@ -134,6 +159,43 @@ class BackgroundComponent extends PositionComponent {
       const Rect.fromLTWH(0, groundTop, artWidth, 2),
       Paint()..color = scenery.accent,
     );
+    canvas.restore();
+  }
+
+  /// Desenha as cópias necessárias para cobrir a arena na posição atual da
+  /// rolagem, chamando [draw] com o deslocamento de cada uma e se ela é a cópia
+  /// espelhada.
+  void _renderScrolling(
+    Canvas canvas,
+    void Function(double offset, bool mirrored) draw,
+  ) {
+    // Rolagem para a esquerda: o time avança para a direita. A volta em duas
+    // larguras preserva a paridade do espelho, então a emenda continua casada
+    // no instante em que o mundo dá a volta.
+    final scrolled = scrollX % _wrapWidth;
+    for (var copy = (scrolled / artWidth).floor(); ; copy++) {
+      final offset = copy * artWidth - scrolled;
+      if (offset >= artWidth) break;
+      draw(offset, copy.isOdd);
+    }
+  }
+
+  /// Aplica a transformação de uma cópia e desenha.
+  void _copy(
+    Canvas canvas,
+    double offset,
+    bool mirrored,
+    void Function() draw,
+  ) {
+    canvas.save();
+    canvas.translate(offset, 0);
+    if (mirrored) {
+      // Espelha em torno da própria largura, para a cópia encostar na anterior
+      // pela borda que ela mesma tem.
+      canvas.translate(artWidth, 0);
+      canvas.scale(-1, 1);
+    }
+    draw();
     canvas.restore();
   }
 

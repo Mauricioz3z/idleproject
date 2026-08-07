@@ -97,6 +97,14 @@ void main() {
   List<CombatantComponent> combatants(CombatArena arena) =>
       arena.world.children.whereType<CombatantComponent>().toList();
 
+  /// Onde cada um para, medido no próprio jogo com a caminhada concluída. O
+  /// teste compara a arena com ela mesma parada, e não com uma cópia das
+  /// constantes de layout.
+  Map<String, double> restingX(CombatArena arena, CombatState state) {
+    arena.sync(state, null);
+    return {for (final v in combatants(arena)) v.entityId: v.position.x};
+  }
+
   testWidgets('a origem do mundo é o canto da arena, não o centro', (
     tester,
   ) async {
@@ -197,6 +205,75 @@ void main() {
     }
     // A arena ficou mais baixa: a linha do chão subiu junto.
     expect(combatants(arena).first.position.y, lessThan(antes));
+  });
+
+  testWidgets('R-M08-13: na caminhada o grupo entra pela direita e chega', (
+    tester,
+  ) async {
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    final alvo = restingX(arena, state);
+
+    // Começo da caminhada: ninguém está no lugar ainda, todos à direita dele.
+    arena.sync(state, null, travelProgress: 0);
+    await tester.pump();
+    final monstros = combatants(arena)
+        .where((v) => v.entityId.startsWith('m'))
+        .toList();
+    expect(monstros.length, 8);
+    for (final view in monstros) {
+      expect(
+        view.position.x,
+        greaterThan(alvo[view.entityId]!),
+        reason: '${view.entityId} já nasceu no lugar, sem entrar',
+      );
+      expect(view.isWalking, isTrue);
+    }
+
+    // Meio do caminho: mais perto do que estava, e ainda não chegou.
+    final naSaida = {for (final v in monstros) v.entityId: v.position.x};
+    arena.sync(state, null, travelProgress: 0.5);
+    await tester.pump();
+    for (final view in monstros) {
+      expect(view.position.x, greaterThan(alvo[view.entityId]!));
+      expect(view.position.x, lessThan(naSaida[view.entityId]!));
+    }
+
+    // Chegada: todos no lugar, ninguém mais andando.
+    arena.sync(state, null, travelProgress: 1);
+    await tester.pump();
+    for (final view in combatants(arena)) {
+      expect(view.isWalking, isFalse);
+      expect(view.position.x, alvo[view.entityId]!);
+    }
+  });
+
+  testWidgets('o cenário rola enquanto o time anda, e para quando chega', (
+    tester,
+  ) async {
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    final background = arena.world.children
+        .whereType<BackgroundComponent>()
+        .single;
+
+    arena.sync(state, null, travelProgress: 0.2);
+    final antes = background.scrollX;
+    await tester.pump(const Duration(milliseconds: 300));
+    final andando = background.scrollX;
+    expect(
+      andando,
+      greaterThan(antes),
+      reason: 'o cenário ficou parado durante a caminhada',
+    );
+
+    arena.sync(state, null, travelProgress: 1);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      background.scrollX,
+      andando,
+      reason: 'o cenário continuou rolando depois de o time chegar',
+    );
   });
 
   testWidgets(

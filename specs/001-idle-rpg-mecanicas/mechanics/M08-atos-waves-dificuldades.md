@@ -25,6 +25,26 @@ Estruturar o conteúdo em waves, atos e dificuldades encadeadas, criando progres
 - **R-M08-09**: Não há limite superior de dificuldades; o escalonamento é procedural.
 - **R-M08-10**: Ao iniciar uma nova dificuldade, o jogador retorna ao Ato 1, wave 1, mantendo heróis, itens, níveis e runas.
 - **R-M08-11**: O jogador pode retornar a atos e dificuldades já concluídos.
+- **R-M08-13**: Entre uma wave e a seguinte o time **caminha** até o grupo novo, por `CombatEngine.travelSeconds` (1 s). O combate não corre durante a caminhada, e ela não exige ação nenhuma do jogador — R-M08-05 continua valendo: a wave seguinte inicia automaticamente.
+
+### Sobre R-M08-13
+
+O grupo não aparece parado na frente do time: o time avança e encontra o grupo.
+Visualmente, o cenário rola, os heróis fazem o passo e os monstros entram pela
+borda direita — a arena resolve isso em `combat_arena.dart`, e a arte tem a
+linha de caminhada opcional descrita em
+[contracts/assets-sprites.md](../contracts/assets-sprites.md) §1.
+
+O que **não** é opcional é o pedágio ser cobrado nos dois lugares. A caminhada é
+tempo de jogo, então quem simula uma ausência tem de pagá-la também: o laço de
+`offline_simulator.dart` soma `travelSeconds` ao custo de cada wave, exatamente
+como o tick ao vivo. Cobrar de um lado só faria a mesma hora render waves
+diferentes com o app aberto e fechado — a divergência que
+[research.md](../research.md) R3 existe para impedir.
+
+Os monstros da wave nova **nascem no início da caminhada**, não no fim: é o que
+dá à arena alguém para fazer entrar. Eles ficam intocáveis enquanto ela dura,
+porque o motor está congelado.
 
 ## Cenários
 

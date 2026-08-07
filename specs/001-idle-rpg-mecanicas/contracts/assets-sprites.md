@@ -26,27 +26,41 @@ começar pelos 6 heróis, por exemplo — e o resto continua jogável.
 
 ### Layout de folha (sprite sheet)
 
-Toda folha de personagem é uma **grade fixa de 4 colunas × 3 linhas**, sem
-espaçamento nem margem:
+Toda folha de personagem é uma grade de **4 colunas**, sem espaçamento nem
+margem. As 3 primeiras linhas são obrigatórias; a 4ª é a caminhada:
 
 ```
 coluna:    0        1        2        3
 linha 0:  idle_0   idle_1   idle_2   idle_3     ← ciclo contínuo
 linha 1:  atk_0    atk_1    atk_2    atk_3      ← dispara a cada golpe
 linha 2:  die_0    die_1    die_2    die_3      ← o último quadro fica congelado
+linha 3:  walk_0   walk_1   walk_2   walk_3     ← opcional, ciclo contínuo
 ```
 
 - **idle**: respiração/oscilação sutil. Roda em loop, ~0,5 s o ciclo inteiro.
 - **attack**: um golpe completo, tocado uma vez. O impacto deve cair no quadro 2.
 - **die**: queda. Para heróis é a incapacitação — o **quadro 3 fica parado** os
   30 s até o revive, então ele precisa ficar legível estático.
+- **walk**: o passo da caminhada entre waves (R-M08-13). Ciclo de 4 quadros, em
+  loop, ~0,55 s. O personagem **não sai do lugar** — quem se move é o cenário —,
+  então o ciclo é de pernas e balanço, não de deslocamento.
 - **hit** (piscada branca ao levar dano) é feito em código. **Não desenhe.**
+
+**A linha 3 é a única opcional.** Folha de 3 linhas continua válida: o
+carregador repete o idle no lugar da caminhada, e a arena compensa com o balanço
+vertical de 1 px que já aplica por código. É o que mantém a entrega em levas —
+dá para atualizar os 6 heróis primeiro e os 12 monstros depois.
+
+Folha **fora** desses tamanhos é recusada por inteiro e o personagem cai no
+retângulo colorido. Não existe meio caminho: grade errada renderiza recortes
+fora da imagem, que é pior que a ausência de arte.
 
 ---
 
 ## 2. Heróis — 6 arquivos
 
-**Quadro 16×24 px** → folha de **64×72 px** cada.
+**Quadro 16×24 px** → folha de **64×96 px** cada (4×4, com a linha de
+caminhada). Sem ela, **64×72** (4×3) continua aceito.
 
 > Desvio consciente de §7.1, que diz 16×16: humanoide em 16×16 fica ilegível
 > com 4 heróis lado a lado. 16 de largura mantém o alinhamento com os monstros.
@@ -71,8 +85,14 @@ As cores de destaque atuais por posição na formação são azul, roxo, verde e
 
 Pasta: `assets/sprites/monsters/`
 
-**Comuns: quadro 16×16 px** → folha de **64×48 px**.
-**Bosses: quadro 32×32 px** → folha de **128×96 px**.
+**Comuns: quadro 16×16 px** → folha de **64×64 px** com caminhada, **64×48** sem.
+**Bosses: quadro 32×32 px** → folha de **128×128 px** com caminhada, **128×96**
+sem.
+
+Os monstros também entram andando: eles chegam pela borda direita enquanto o
+time avança (R-M08-13). Sem a linha 3 eles entram deslizando com o idle, o que
+funciona — a caminhada aqui vale menos que nos heróis, porque o monstro fica
+menos tempo em tela.
 
 ### Ato 1 — Floresta (verde, orgânico)
 

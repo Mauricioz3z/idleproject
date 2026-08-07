@@ -152,9 +152,31 @@ class CombatArena extends FlameGame {
           _world!.y - BackgroundComponent.groundHeight) +
       _footInset;
 
+  /// Velocidade da rolagem do cenário durante a caminhada, em pixels de arte por
+  /// segundo. Vem da leitura, não da física: mais rápido que isto e o cenário
+  /// borra; mais devagar e o time parece patinar no lugar.
+  static const double _scrollSpeed = 70;
+
+  /// De quanto além da borda direita o grupo novo vem.
+  static const double _entryDistance = 70;
+
+  /// Andamento da caminhada: 0 acabou de sair, 1 chegou. Fora da caminhada é 1.
+  double _travelProgress = 1;
+
+  bool get _isWalking => _travelProgress < 1;
+
   /// Recebe o estado mais recente e os eventos do tick.
-  void sync(CombatState state, CombatTickResult? events) {
+  ///
+  /// [travelProgress] é o andamento da caminhada até o grupo seguinte
+  /// (R-M08-13): 1 significa em combate, e é o padrão para quem não tem essa
+  /// noção — os testes de fumaça, por exemplo.
+  void sync(
+    CombatState state,
+    CombatTickResult? events, {
+    double travelProgress = 1,
+  }) {
     _latest = state;
+    _travelProgress = travelProgress.clamp(0.0, 1.0);
     // Sem layout não há onde posicionar nada, e ler `size` aqui lançaria. O
     // quadro seguinte já tem tudo: `onGameResize` chama `sync` de volta.
     if (_world == null) return;
@@ -204,6 +226,15 @@ class CombatArena extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
+
+    // O cenário passa enquanto o time anda (R-M08-13). A rolagem é acumulada em
+    // tempo de render, e não derivada do andamento, para ficar suave mesmo com
+    // o passo fixo de 30 Hz atrás dela.
+    final background = _background;
+    if (background != null && _isWalking) {
+      background.scrollX += _scrollSpeed * dt;
+    }
+
     _accumulator += dt;
     var steps = 0;
     while (_accumulator >= fixedStepSeconds && steps < maxStepsPerFrame) {
@@ -231,6 +262,10 @@ class CombatArena extends FlameGame {
       view.position.setValues(_heroBaseX + i * _heroSpacing, _groundY);
       view.hpFraction = hero.hpFraction;
       view.isDown = hero.isIncapacitated;
+      // Os heróis não saem do lugar: quem se move é o cenário. É o que permite
+      // manter a formação e a mira do combate intactas enquanto a caminhada
+      // acontece.
+      view.isWalking = _isWalking;
       // O sprite chega depois do componente: carregar é assíncrono e o combate
       // não pode esperar por asset.
       _ensureDressed(view, () => _catalog!.hero(hero.definition.id));
@@ -286,6 +321,9 @@ class CombatArena extends FlameGame {
           ? 0
           : (monster.currentHp / monster.stats.maxHp).toDouble();
       view.isDown = !monster.isAlive;
+      // Entrando pela direita enquanto o time anda, e andando também: quem
+      // chega vindo de longe não chega parado.
+      view.isWalking = _isWalking;
       _ensureDressed(
         view,
         () => _catalog!.monster(monster.template.id, isBoss: monster.isBoss),
@@ -304,9 +342,24 @@ class CombatArena extends FlameGame {
   }
 
   Vector2 _monsterPosition(int slot) => Vector2(
-    _monsterBaseX + (slot % _monstersPerRow) * _monsterSpacing,
+    _monsterBaseX +
+        (slot % _monstersPerRow) * _monsterSpacing +
+        _entryOffset(slot),
     _groundY - (slot ~/ _monstersPerRow) * _rowDepth,
   );
+
+  /// Quanto o monstro ainda está à direita do seu lugar.
+  ///
+  /// A desaceleração é quadrática: o grupo entra rápido e assenta devagar, que é
+  /// como uma aproximação lê. Os de trás na fila chegam um pouco depois, para o
+  /// grupo não se mover como um bloco só.
+  double _entryOffset(int slot) {
+    if (!_isWalking) return 0;
+    final lag = (slot % _monstersPerRow) * 0.06;
+    final own = ((_travelProgress - lag) / (1 - lag)).clamp(0.0, 1.0);
+    final eased = 1 - (1 - own) * (1 - own);
+    return _entryDistance * (1 - eased);
+  }
 
   void _spawnFloatingNumbers(CombatState state, CombatTickResult events) {
     for (final hit in events.hits) {
