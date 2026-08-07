@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
+import '../../core/constants/game_enums.dart';
 import '../../core/numeric/game_number.dart';
 import '../../core/numeric/number_format.dart';
 import '../../domain/engines/combat_engine.dart';
@@ -124,14 +125,27 @@ class CombatArena extends FlameGame {
   /// pousados exatamente na linha de horizonte, que lê como flutuando.
   static const double _footInset = 16;
 
-  static const double _heroBaseX = 60;
-  static const double _heroSpacing = 34;
+  /// Onde para quem luta na frente do time.
+  ///
+  /// Encostada na coluna da frente dos monstros de propósito. Com o time
+  /// plantado em x=60 e o primeiro monstro em x=190 sobravam 130 px de chão
+  /// vazio entre os dois lados: cada um batia no ar do seu canto, e a arena
+  /// lia como dois grupos em telas diferentes — que foi a queixa que originou
+  /// esta composição.
+  ///
+  /// A luta inteira fica um pouco à esquerda do centro: o chão que sobra à
+  /// direita é por onde o grupo seguinte entra, e o que sobra à esquerda é o
+  /// caminho já andado.
+  static const double _frontLineX = 140;
+
+  /// Distância entre um herói e o de trás dele na fila.
+  static const double _heroSpacing = 26;
 
   /// Os monstros vêm em até 8 por wave (R-M08-05) e a arena tem 320 px de
   /// largura, dos quais os heróis ocupam a esquerda. Oito numa fileira só não
   /// cabem — daí duas fileiras de quatro, a de trás mais alta e desenhada
   /// atrás, que é como se dá profundidade em pixel art sem perspectiva.
-  static const double _monsterBaseX = 190;
+  static const double _monsterBaseX = 162;
   static const double _monsterSpacing = 30;
   static const int _monstersPerRow = 4;
 
@@ -157,8 +171,15 @@ class CombatArena extends FlameGame {
   /// borra; mais devagar e o time parece patinar no lugar.
   static const double _scrollSpeed = 70;
 
-  /// De quanto além da borda direita o grupo novo vem.
-  static const double _entryDistance = 70;
+  /// De quanto além do seu lugar o grupo novo nasce.
+  ///
+  /// Derivada de [CombatantComponent.walkSpeed] e de
+  /// [CombatEngine.travelSeconds], com folga: o grupo tem de **chegar** antes de
+  /// o motor voltar a correr, senão os primeiros golpes da wave caem sobre um
+  /// monstro que ainda está entrando na tela. Os 10% cobrem a diferença entre o
+  /// passo fixo, que mede a caminhada, e o quadro de render, que a desenha.
+  static const double _entryDistance =
+      CombatantComponent.walkSpeed * CombatEngine.travelSeconds * 0.9;
 
   /// Andamento da caminhada: 0 acabou de sair, 1 chegou. Fora da caminhada é 1.
   double _travelProgress = 1;
@@ -246,31 +267,63 @@ class CombatArena extends FlameGame {
   }
 
   void _syncHeroes(CombatState state) {
+    final line = _battleLine(state.heroes);
+
     for (var i = 0; i < state.heroes.length; i++) {
       final hero = state.heroes[i];
+      final x = line[hero.heroId]!;
       final view = _heroViews.putIfAbsent(hero.heroId, () {
         final c = HeroComponent(
           entityId: hero.heroId,
-          position: Vector2(_heroBaseX + i * _heroSpacing, _groundY),
+          position: Vector2(x, _groundY),
           color: _heroColors[i % _heroColors.length],
         );
         world.add(c);
         return c;
       });
-      // A posição é reafirmada a cada sync: ela depende do tamanho do mundo, e
-      // girar o aparelho muda a linha do chão.
-      view.position.setValues(_heroBaseX + i * _heroSpacing, _groundY);
+      // Andando, não teleportando: quem dá o passo é o componente. A linha do
+      // chão é reafirmada a cada sync porque depende do tamanho do mundo, e
+      // girar o aparelho a move.
+      view.walkTo(x);
+      view.position.y = _groundY;
       view.hpFraction = hero.hpFraction;
       view.isDown = hero.isIncapacitated;
-      // Os heróis não saem do lugar: quem se move é o cenário. É o que permite
-      // manter a formação e a mira do combate intactas enquanto a caminhada
-      // acontece.
-      view.isWalking = _isWalking;
+      // Na caminhada entre waves o time não muda de x — quem passa é o
+      // cenário —, mas as pernas andam. É o que mantém a formação e a mira do
+      // combate intactas enquanto a caminhada acontece.
+      view.isMarching = _isWalking;
       // O sprite chega depois do componente: carregar é assíncrono e o combate
       // não pode esperar por asset.
       _ensureDressed(view, () => _catalog!.hero(hero.definition.id));
     }
   }
+
+  /// Onde cada herói se posta, da frente para trás.
+  ///
+  /// Quem luta corpo a corpo vai à frente e o resto atrás, na ordem da
+  /// formação. Sem esta ordenação o arqueiro podia ficar colado no monstro com
+  /// o tanque três posições atrás — o oposto do que a mecânica de provocação
+  /// do Vanguard (CEN-M02-002) mostra acontecendo.
+  Map<String, double> _battleLine(List<HeroCombatant> heroes) {
+    final front = <String>[];
+    final back = <String>[];
+    for (final hero in heroes) {
+      (_fightsUpClose(hero.definition.role) ? front : back).add(hero.heroId);
+    }
+
+    final line = <String, double>{};
+    var rank = 0;
+    for (final id in [...front, ...back]) {
+      line[id] = _frontLineX - rank * _heroSpacing;
+      rank++;
+    }
+    return line;
+  }
+
+  static bool _fightsUpClose(HeroRole role) => switch (role) {
+    HeroRole.tank || HeroRole.meleeDamage || HeroRole.brute => true,
+    HeroRole.magicDamage || HeroRole.rangedDamage || HeroRole.support => false,
+  };
 
   /// Dispara o carregamento do sprite de uma entidade, uma vez.
   ///
@@ -294,36 +347,58 @@ class CombatArena extends FlameGame {
 
   void _syncMonsters(CombatState state) {
     final present = <String>{};
-    for (final monster in state.monsters) {
+    // Quantos vivos já ocuparam lugar em cada fileira. É o que faz quem está
+    // atrás dar um passo à frente quando o da frente cai, em vez de a fila
+    // ficar com um buraco e o time bater no vazio.
+    final taken = <int, int>{};
+
+    final ordered = [...state.monsters]
+      ..sort((a, b) => a.slot.compareTo(b.slot));
+
+    for (final monster in ordered) {
       present.add(monster.instanceId);
-      final position = _monsterPosition(monster.slot);
       final row = monster.slot ~/ _monstersPerRow;
+      final column = taken[row] ?? 0;
+      if (monster.isAlive) taken[row] = column + 1;
+
+      final position = _monsterPosition(row, column, isBoss: monster.isBoss);
 
       final view = _monsterViews.putIfAbsent(monster.instanceId, () {
+        // Grupo que chega enquanto o time caminha nasce fora da tela e entra
+        // andando (R-M08-13). Na primeira wave não há caminhada, e ele já
+        // começa no lugar — SC-M01-01 pede ação imediata, não uma entrada.
+        final spawn = _isWalking
+            ? Vector2(position.x + _entryDistance, position.y)
+            : position;
         // Boss ganha componente próprio, com aura e coroa (T083).
-        final CombatantComponent c = monster.isBoss
+        final MonsterComponent c = monster.isBoss
             ? BossComponent(
                 entityId: monster.instanceId,
-                position: position,
+                position: spawn,
+                swingPhase: monster.slot / _monstersPerRow,
               )
             : MonsterComponent(
                 entityId: monster.instanceId,
-                position: position,
+                position: spawn,
                 isBoss: false,
+                // Golpes escalonados por lugar na fila: o grupo inteiro
+                // batendo no mesmo quadro lê como um bloco só.
+                swingPhase: monster.slot / _monstersPerRow,
               );
         // A fileira de trás fica atrás mesmo, sem tapar quem está na frente.
         c.priority = -row;
         world.add(c);
         return c;
       });
-      view.position.setFrom(position);
+
+      // Morto fica onde caiu: o corpo é a marca de que ali havia um inimigo, e
+      // arrastá-lo pela fila daria a um cadáver o lugar de quem ainda luta.
+      if (monster.isAlive) view.walkTo(position.x);
+      view.position.y = position.y;
       view.hpFraction = monster.stats.maxHp.isZero
           ? 0
           : (monster.currentHp / monster.stats.maxHp).toDouble();
       view.isDown = !monster.isAlive;
-      // Entrando pela direita enquanto o time anda, e andando também: quem
-      // chega vindo de longe não chega parado.
-      view.isWalking = _isWalking;
       _ensureDressed(
         view,
         () => _catalog!.monster(monster.template.id, isBoss: monster.isBoss),
@@ -341,25 +416,17 @@ class CombatArena extends FlameGame {
     });
   }
 
-  Vector2 _monsterPosition(int slot) => Vector2(
-    _monsterBaseX +
-        (slot % _monstersPerRow) * _monsterSpacing +
-        _entryOffset(slot),
-    _groundY - (slot ~/ _monstersPerRow) * _rowDepth,
-  );
+  Vector2 _monsterPosition(int row, int column, {required bool isBoss}) =>
+      Vector2(
+        // A âncora é o centro, e o boss é o dobro de largo: sem compensar a
+        // sobra ele encostaria no herói da frente, que é a única coisa que
+        // sobrou de pé no campo numa wave de boss.
+        _monsterBaseX + column * _monsterSpacing + (isBoss ? _bossInset : 0),
+        _groundY - row * _rowDepth,
+      );
 
-  /// Quanto o monstro ainda está à direita do seu lugar.
-  ///
-  /// A desaceleração é quadrática: o grupo entra rápido e assenta devagar, que é
-  /// como uma aproximação lê. Os de trás na fila chegam um pouco depois, para o
-  /// grupo não se mover como um bloco só.
-  double _entryOffset(int slot) {
-    if (!_isWalking) return 0;
-    final lag = (slot % _monstersPerRow) * 0.06;
-    final own = ((_travelProgress - lag) / (1 - lag)).clamp(0.0, 1.0);
-    final eased = 1 - (1 - own) * (1 - own);
-    return _entryDistance * (1 - eased);
-  }
+  /// Meia diferença entre a largura do boss e a do monstro comum.
+  static const double _bossInset = 9;
 
   void _spawnFloatingNumbers(CombatState state, CombatTickResult events) {
     for (final hit in events.hits) {

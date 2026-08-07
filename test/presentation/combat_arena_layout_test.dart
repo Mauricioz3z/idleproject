@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pixel_idle_quest/core/numeric/game_number.dart';
 import 'package:pixel_idle_quest/domain/engines/combat_engine.dart';
 import 'package:pixel_idle_quest/domain/entities/monster.dart';
 import 'package:pixel_idle_quest/domain/entities/progress_position.dart';
@@ -29,9 +30,16 @@ import '../support/test_content.dart';
 /// Teste de domínio não vê nada disso. O que faltava era afirmar geometria.
 void main() {
   /// 4 heróis e 8 monstros: o pior caso de lotação da arena (R-M08-05).
-  CombatState fullArena() => CombatState.start(
+  ///
+  /// [prefix] distingue as instâncias de uma wave das da seguinte — é o que a
+  /// arena usa para saber que um monstro é novo e tem de entrar andando.
+  /// [dead] marca os slots já derrotados.
+  CombatState fullArena({String prefix = 'm', Set<int> dead = const {}}) =>
+      CombatState.start(
     position: const ProgressPosition(difficulty: 1, act: 1, wave: 3),
     heroes: [
+      // As definições de verdade, com o papel de cada classe: é o papel que
+      // decide quem fica na frente da linha de batalha.
       for (final classId in const [
         'vanguard',
         'elementalist',
@@ -40,18 +48,28 @@ void main() {
       ])
         HeroCombatant.fresh(
           heroId: 'hero_$classId',
-          definition: TestContent.heroClass(id: classId),
+          definition: TestContent.sixClasses().firstWhere(
+            (c) => c.id == classId,
+          ),
           stats: TestContent.stats(attack: 100, maxHp: 500),
         ),
     ],
     monsters: [
       for (var slot = 0; slot < 8; slot++)
-        Monster.spawn(
-          instanceId: 'm$slot',
-          template: TestContent.monster(id: 'forest_bramble'),
-          stats: TestContent.stats(maxHp: 100),
-          slot: slot,
-        ),
+        if (dead.contains(slot))
+          Monster.spawn(
+            instanceId: '$prefix$slot',
+            template: TestContent.monster(id: 'forest_bramble'),
+            stats: TestContent.stats(maxHp: 100),
+            slot: slot,
+          ).damaged(GameNumber.fromInt(999))
+        else
+          Monster.spawn(
+            instanceId: '$prefix$slot',
+            template: TestContent.monster(id: 'forest_bramble'),
+            stats: TestContent.stats(maxHp: 100),
+            slot: slot,
+          ),
     ],
   );
 
@@ -97,11 +115,20 @@ void main() {
   List<CombatantComponent> combatants(CombatArena arena) =>
       arena.world.children.whereType<CombatantComponent>().toList();
 
-  /// Onde cada um para, medido no próprio jogo com a caminhada concluída. O
-  /// teste compara a arena com ela mesma parada, e não com uma cópia das
-  /// constantes de layout.
-  Map<String, double> restingX(CombatArena arena, CombatState state) {
-    arena.sync(state, null);
+  /// Onde cada um para, medido no próprio jogo depois de a caminhada terminar.
+  ///
+  /// O teste compara a arena com ela mesma parada, e não com uma cópia das
+  /// constantes de layout. Precisa de tempo porque ninguém é teleportado: o
+  /// combatente **anda** até o seu lugar, que é o ponto desta mudança.
+  Future<Map<String, double>> restingX(
+    WidgetTester tester,
+    CombatArena arena,
+    CombatState state,
+  ) async {
+    for (var i = 0; i < 20; i++) {
+      arena.sync(state, null);
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     return {for (final v in combatants(arena)) v.entityId: v.position.x};
   }
 
@@ -207,45 +234,153 @@ void main() {
     expect(combatants(arena).first.position.y, lessThan(antes));
   });
 
-  testWidgets('R-M08-13: na caminhada o grupo entra pela direita e chega', (
+  testWidgets('os dois lados lutam a distância de golpe, não cada um no seu '
+      'canto', (tester) async {
+    // Este é o defeito que o print de tela mostrava: o time plantado na
+    // esquerda, o grupo inimigo na direita e 130 px de chão vazio entre eles.
+    // Ninguém encostava em ninguém, e a luta lia como dois grupos parados em
+    // telas diferentes.
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    await restingX(tester, arena, state);
+
+    final herois = combatants(arena).where((v) => v.entityId.startsWith('hero_'));
+    final monstros = combatants(arena).where((v) => v.entityId.startsWith('m'));
+
+    final frenteDoTime = herois
+        .map((v) => v.position.x + v.size.x / 2)
+        .reduce((a, b) => a > b ? a : b);
+    final monstroMaisPerto = monstros
+        .map((v) => v.position.x - v.size.x / 2)
+        .reduce((a, b) => a < b ? a : b);
+
+    final vao = monstroMaisPerto - frenteDoTime;
+    expect(
+      vao,
+      greaterThanOrEqualTo(0),
+      reason: 'o time e os monstros estão sobrepostos',
+    );
+    expect(
+      vao,
+      lessThanOrEqualTo(16),
+      reason:
+          'sobraram ${vao.toStringAsFixed(0)} px de chão vazio entre o herói '
+          'da frente e o monstro mais próximo — os dois lados batem no ar',
+    );
+  });
+
+  testWidgets('quem luta corpo a corpo fica à frente do time', (tester) async {
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    final parados = await restingX(tester, arena, state);
+
+    // `vanguard` é tanque e `berserker` é bruto; `elementalist` e
+    // `sharpshooter` atacam de longe. Os dois primeiros vão à frente.
+    for (final corpoACorpo in const ['hero_vanguard', 'hero_berserker']) {
+      for (final aDistancia in const ['hero_elementalist', 'hero_sharpshooter']) {
+        expect(
+          parados[corpoACorpo],
+          greaterThan(parados[aDistancia]!),
+          reason: '$corpoACorpo devia estar à frente de $aDistancia',
+        );
+      }
+    }
+  });
+
+  testWidgets('R-M08-13: o grupo seguinte entra andando pela direita', (
     tester,
   ) async {
     final state = fullArena();
     final arena = await mount(tester, state: state);
-    final alvo = restingX(arena, state);
+    final alvo = await restingX(tester, arena, state);
 
-    // Começo da caminhada: ninguém está no lugar ainda, todos à direita dele.
-    arena.sync(state, null, travelProgress: 0);
+    // Wave concluída: instâncias novas chegam enquanto o time ainda caminha.
+    // O lugar de cada uma é o da instância de mesmo slot da wave anterior.
+    double lugarDe(String entityId) =>
+        alvo[entityId.startsWith('n') ? 'm${entityId.substring(1)}' : entityId]!;
+
+    final proxima = fullArena(prefix: 'n');
+    arena.sync(proxima, null, travelProgress: 0);
     await tester.pump();
+
     final monstros = combatants(arena)
-        .where((v) => v.entityId.startsWith('m'))
+        .where((v) => v.entityId.startsWith('n'))
         .toList();
     expect(monstros.length, 8);
     for (final view in monstros) {
       expect(
         view.position.x,
-        greaterThan(alvo[view.entityId]!),
+        greaterThan(lugarDe(view.entityId)),
         reason: '${view.entityId} já nasceu no lugar, sem entrar',
       );
       expect(view.isWalking, isTrue);
     }
 
-    // Meio do caminho: mais perto do que estava, e ainda não chegou.
-    final naSaida = {for (final v in monstros) v.entityId: v.position.x};
-    arena.sync(state, null, travelProgress: 0.5);
-    await tester.pump();
-    for (final view in monstros) {
-      expect(view.position.x, greaterThan(alvo[view.entityId]!));
-      expect(view.position.x, lessThan(naSaida[view.entityId]!));
+    // O time não muda de lugar na caminhada — quem passa é o cenário —, mas as
+    // pernas andam.
+    for (final view in combatants(arena).where(
+      (v) => v.entityId.startsWith('hero_'),
+    )) {
+      expect(view.position.x, alvo[view.entityId]);
+      expect(view.isWalking, isTrue);
     }
 
-    // Chegada: todos no lugar, ninguém mais andando.
-    arena.sync(state, null, travelProgress: 1);
-    await tester.pump();
-    for (final view in combatants(arena)) {
-      expect(view.isWalking, isFalse);
-      expect(view.position.x, alvo[view.entityId]!);
+    // Meio do caminho: mais perto do que estava, e ainda não chegou.
+    final naSaida = {for (final v in monstros) v.entityId: v.position.x};
+    arena.sync(proxima, null, travelProgress: 0.4);
+    await tester.pump(const Duration(milliseconds: 400));
+    for (final view in monstros) {
+      expect(view.position.x, lessThan(naSaida[view.entityId]!));
+      expect(
+        view.position.x,
+        greaterThan(lugarDe(view.entityId)),
+        reason: '${view.entityId} chegou antes da hora',
+      );
     }
+
+    // O grupo chega ao seu lugar dentro da caminhada: quem ainda estivesse
+    // entrando quando o motor volta a correr apanharia fora da tela.
+    arena.sync(proxima, null);
+    await tester.pump(
+      Duration(milliseconds: (CombatEngine.travelSeconds * 1000).round() - 400),
+    );
+    for (final view in combatants(arena)) {
+      expect(view.isWalking, isFalse, reason: '${view.entityId} não chegou');
+      expect(
+        view.position.x,
+        lugarDe(view.entityId),
+        reason: '${view.entityId} parou fora do lugar',
+      );
+    }
+  });
+
+  testWidgets('quando o da frente cai, o de trás dá um passo à frente', (
+    tester,
+  ) async {
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    final antes = await restingX(tester, arena, state);
+
+    // Slot 0 derrotado: a fileira da frente aperta.
+    final depois = await restingX(tester, arena, fullArena(dead: {0}));
+
+    expect(
+      depois['m1'],
+      lessThan(antes['m1']!),
+      reason: 'm1 ficou no lugar com o m0 caído na frente dele',
+    );
+    expect(
+      depois['m1'],
+      antes['m0'],
+      reason: 'm1 devia ter assumido o lugar do m0',
+    );
+    expect(
+      depois['m0'],
+      antes['m0'],
+      reason: 'o corpo do m0 andou — cadáver não muda de lugar',
+    );
+    // A fileira de trás não se mexe: quem caiu era da da frente.
+    expect(depois['m4'], antes['m4']);
   });
 
   testWidgets('o cenário rola enquanto o time anda, e para quando chega', (
@@ -274,6 +409,40 @@ void main() {
       andando,
       reason: 'o cenário continuou rolando depois de o time chegar',
     );
+  });
+
+  testWidgets('na caminhada o time toca a passada desenhada, não o idle', (
+    tester,
+  ) async {
+    // A queixa que originou esta mudança foi "o personagem não anda". Ele
+    // andava, no sentido de que o cenário passava — mas as 6 folhas de herói
+    // tinham 3 linhas, sem caminhada, e o carregador cai no idle quando ela
+    // falta. O time cruzava a floresta em pose de sentido.
+    final state = fullArena();
+    final arena = await mount(tester, state: state);
+    await settleSprites(tester, arena, state);
+
+    final herois = combatants(arena).where((v) => v.entityId.startsWith('hero_'));
+
+    arena.sync(state, null, travelProgress: 0.5);
+    await tester.pump(const Duration(milliseconds: 30));
+    for (final view in herois) {
+      expect(
+        view.isPlayingWalkAnimation,
+        isTrue,
+        reason: '${view.entityId} atravessa a caminhada parado',
+      );
+    }
+
+    arena.sync(state, null);
+    await tester.pump(const Duration(milliseconds: 30));
+    for (final view in herois) {
+      expect(
+        view.isPlayingWalkAnimation,
+        isFalse,
+        reason: '${view.entityId} continua andando depois de chegar',
+      );
+    }
   });
 
   testWidgets(

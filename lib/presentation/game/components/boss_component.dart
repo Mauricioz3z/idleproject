@@ -1,8 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:flame/components.dart';
-
 import 'combatant_component.dart';
 
 /// Boss na arena (CEN-M08-002, SC-M08-03).
@@ -11,11 +9,17 @@ import 'combatant_component.dart';
 /// precisa saber que está numa wave de boss antes de comparar o inimigo com
 /// outro na tela. Por isso o boss tem aura pulsante, coroa e barra de vida
 /// própria, mais larga — três sinais independentes.
-class BossComponent extends CombatantComponent {
-  BossComponent({required super.entityId, required super.position})
-    : super(bodyColor: _bossColor, size: Vector2(34, 34));
+class BossComponent extends MonsterComponent {
+  BossComponent({
+    required super.entityId,
+    required super.position,
+    super.swingPhase,
+  }) : super(isBoss: true) {
+    // Um pouco maior que o quadro de 32 px do contrato: o boss precisa
+    // dominar a arena, e crescer o desenho é mais barato que uma folha de 40.
+    size.setValues(34, 34);
+  }
 
-  static const Color _bossColor = Color(0xFF9B3FBF);
   static const Color _auraColor = Color(0xFFE8B44A);
 
   /// Ciclos por segundo da aura.

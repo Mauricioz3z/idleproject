@@ -144,11 +144,97 @@ def _collapse(pose, amount):
     return grid
 
 
+def _leg_split(legs):
+    """Coluna que separa a perna de tras da perna da frente.
+
+    Sai do proprio desenho, e nao da largura do quadro: quase nenhuma pose ocupa
+    os 16 pixels, e usar o centro do quadro classificaria as duas pernas como
+    "de tras" na maioria delas.
+
+    Medida so no terco de baixo -- nos pes. Medindo a fatia inteira, qualquer
+    coisa que desca ate a altura do quadril entra na conta e empurra o meio para
+    o lado: o escudo do Vanguard sozinho deslocava a divisa em 3 pixels, e a
+    linha caia no meio da perna direita, que passava a ser rasgada em duas na
+    passada.
+    """
+    feet = legs[len(legs) * 2 // 3:] or legs
+    columns = [x for row in feet for x, char in enumerate(row) if char != "."]
+    if not columns:
+        return None
+    return (min(columns) + max(columns)) / 2
+
+
+def _walk_frames(pose, facing):
+    """4 quadros de caminhada: contato, passagem, contato oposto, passagem.
+
+    E o ciclo classico de 4 quadros. Nos de contato as pernas abrem, uma para
+    cada lado; nos de passagem elas se juntam e o corpo inteiro sobe 1 pixel --
+    o ponto alto da passada. Subir so o tronco esticaria a cintura, que a esta
+    escala le como o boneco se deformando, nao caminhando.
+
+    A abertura e uma deformacao de cisalhamento: o deslocamento cresce da
+    cintura ate o pe, entao o quadril fica preso ao tronco e so o pe viaja. Sem
+    isso as pernas se soltariam do corpo.
+
+    Os dois contatos abrem as pernas para o **mesmo** lado, e nao um para cada.
+    Em 16 pixels a perna tem 3 de largura e a folga entre as duas e 1: cruzar as
+    pernas no contato oposto as funde num bloco so, e o boneco perde as pernas
+    metade do tempo. Quem alterna e o braco, que balanca contra a passada -- e o
+    que os sprites de 8 bits fazem, pelo mesmo motivo.
+    """
+    hip = int(pose.height * 0.72)
+    upper = [row[:] for row in pose.body[:hip]]
+    legs = [row[:] for row in pose.body[hip:]]
+    middle = _leg_split(legs)
+    last = max(1, len(legs) - 1)
+
+    frames = []
+    # (pernas abertas, corpo no alto da passada, balanco do braco)
+    for stride, bob, arm in ((1, 0, -1), (0, -1, 0), (1, 0, 1), (0, -1, 0)):
+        grid = _blank(pose.width, pose.height)
+        _stamp(grid, upper, 0, bob)
+        _stamp(grid, pose.weapon, arm * facing, bob)
+
+        for y, row in enumerate(legs):
+            # Preso na cintura, solto no pe.
+            depth = y / last
+            target_y = hip + y + bob
+            if not 0 <= target_y < pose.height:
+                continue
+
+            placed = []
+            for x, char in enumerate(row):
+                if char == ".":
+                    continue
+                shift = 0
+                if stride and middle is not None:
+                    # Sem `facing` aqui: abrir e afastar cada perna do meio do
+                    # corpo, para os dois lados. Multiplicar pelo facing
+                    # inverteria o sinal nos monstros e as pernas se fechariam
+                    # uma sobre a outra em vez de abrir.
+                    away = 1 if x > middle else -1
+                    shift = int(round(stride * away * depth))
+                placed.append((x + shift, char))
+
+            # Linha que sairia do quadro anda inteira, ou nao anda. Recortar so
+            # o pixel de fora comeria a borda da perna -- some um pixel de
+            # contorno e a silhueta pisca a cada passada.
+            if any(not 0 <= x < pose.width for x, _ in placed):
+                placed = [(x, char) for x, char in enumerate(row) if char != "."]
+            for x, char in placed:
+                grid[target_y][x] = char
+
+        frames.append(grid)
+
+    return frames
+
+
 def build_frames(pose, facing=1):
-    """Gera as 12 poses da folha: 4 idle, 4 attack, 4 die.
+    """Gera as 16 poses da folha: 4 idle, 4 attack, 4 die, 4 walk.
 
     `facing` e 1 para quem olha para a direita (herois) e -1 para a esquerda
-    (monstros); define para que lado o golpe avanca.
+    (monstros); define para que lado o golpe avanca e para que lado a perna da
+    frente avanca na passada.
     """
     frames = []
 
@@ -190,11 +276,16 @@ def build_frames(pose, facing=1):
     for amount in (0.25, 0.55, 0.85, 1.0):
         frames.append(_collapse(pose, amount))
 
+    # --- walk: a 4a linha do contrato. Sem ela o jogo desenha a caminhada de
+    # R-M08-13 como um balanco de 1 pixel sobre a pose ociosa -- que e o que
+    # fazia o time parecer deslizar pelo cenario em vez de andar nele.
+    frames.extend(_walk_frames(pose, facing))
+
     return frames
 
 
 def write_sheet(path, frames, frame_w, frame_h, columns=4):
-    """Grava a folha 4x3 conforme contracts/assets-sprites.md."""
+    """Grava a folha 4x4 conforme contracts/assets-sprites.md."""
     rows = (len(frames) + columns - 1) // columns
     sheet = Image.new("RGBA", (frame_w * columns, frame_h * rows), (0, 0, 0, 0))
 
