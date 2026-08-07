@@ -141,6 +141,12 @@ class _ItemGrid extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF1E1B2E),
+      // A folha cresce com o número de heróis da formação: são um bloco de
+      // comparação e um botão por herói. Com a altura padrão de 9/16 da tela ela
+      // estoura por volta de 100 px na formação de três — daí `isScrollControlled`
+      // e o teto de 85% dentro de `_ItemSheet`.
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) =>
           _ItemSheet(item: item, heroes: heroes),
     );
@@ -152,6 +158,9 @@ class _ItemGrid extends ConsumerWidget {
 ///
 /// A comparação aparece já aberta, sem passo intermediário: SC-M05-01 dá ao
 /// jogador no máximo 3 interações da tela de combate até equipar.
+///
+/// O primeiro herói da formação fica no topo, acima da dobra: quem só quer
+/// equipar não precisa rolar, e rolar contaria como interação em SC-007.
 class _ItemSheet extends ConsumerWidget {
   const _ItemSheet({required this.item, required this.heroes});
 
@@ -163,63 +172,68 @@ class _ItemSheet extends ConsumerWidget {
     final loot = ref.read(lootControllerProvider.notifier);
     final combat = ref.read(combatControllerProvider.notifier);
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ItemHeadline(item: item),
-          const SizedBox(height: 12),
-          for (final hero in heroes) ...[
-            Text(
-              hero.classId,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            ItemComparison(
-              candidate: item,
-              equipped: loot.equippedInSlot(hero, item.type),
-            ),
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () {
-                  combat.equipItem(hero.id, item);
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Equipar'),
-              ),
-            ),
-            const Divider(color: Color(0xFF3A3548)),
-          ],
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  combat.toggleFavorite(item);
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  item.isFavorited ? 'Desfavoritar' : 'Favoritar',
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ItemHeadline(item: item),
+            const SizedBox(height: 12),
+            for (final hero in heroes) ...[
+              Text(
+                hero.classId,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  combat.sellItem(item);
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Vender'),
+              const SizedBox(height: 4),
+              ItemComparison(
+                candidate: item,
+                equipped: loot.equippedInSlot(hero, item.type),
               ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                    combat.equipItem(hero.id, item);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Equipar'),
+                ),
+              ),
+              const Divider(color: Color(0xFF3A3548)),
             ],
-          ),
-        ],
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    combat.toggleFavorite(item);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    item.isFavorited ? 'Desfavoritar' : 'Favoritar',
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    combat.sellItem(item);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Vender'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

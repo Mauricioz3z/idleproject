@@ -36,10 +36,22 @@ class SpriteCatalog {
   static const double _frameDuration = 0.14;
   static const int _columns = 4;
 
+  /// Prefixo de asset do Flame.
+  ///
+  /// O padrão do Flame é `assets/images/`, e a arte deste projeto está em
+  /// `assets/sprites/` (contracts/assets-sprites.md §2). Sem corrigir isto,
+  /// **todo** carregamento erra o caminho, cai no `catch` de [_image] e o jogo
+  /// desenha retângulos coloridos no lugar dos 29 sprites — sem uma única
+  /// exceção visível, porque a ausência de arte é estado esperado aqui.
+  static const String _assetPrefix = 'assets/';
+
   final Map<String, CombatantAnimations?> _combatants = {};
   final Map<String, Sprite?> _backgrounds = {};
 
-  static Future<SpriteCatalog> load() async => SpriteCatalog._();
+  static Future<SpriteCatalog> load() async {
+    Flame.images.prefix = _assetPrefix;
+    return SpriteCatalog._();
+  }
 
   /// Animações de um herói (quadro 16×24).
   Future<CombatantAnimations?> hero(String classId) =>

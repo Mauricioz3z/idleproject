@@ -332,20 +332,20 @@ Projeto Flutter único, conforme a Structure Decision de [plan.md](plan.md): dom
 ## Phase 10: Polish & Cross-Cutting Concerns
 
 - [x] T142 [P] Integrar Firebase Analytics e Crashlytics em `lib/services/analytics_service.dart`
-- [x] T143 [P] Substituir sprites placeholder por pixel art final em `assets/sprites/`, em sprite sheets únicos por classe e por tipo de monstro — 29 sprites gerados por `tool/generate_sprites.py` e ligados ao jogo por `SpriteCatalog`
+- [x] T143 [P] Substituir sprites placeholder por pixel art final em `assets/sprites/`, em sprite sheets únicos por classe e por tipo de monstro — 29 sprites gerados por `tool/generate_sprites.py` e ligados ao jogo por `SpriteCatalog`, com carregamento verificado em `test/presentation/sprite_catalog_test.dart`
 - [ ] T144 Perfilar com `flutter run --profile` no aparelho de referência de [plan.md](plan.md) e garantir 30 FPS sustentados com 4 heróis e 8 monstros, ajustando `lib/presentation/game/idle_rpg_game.dart` conforme necessário
 - [ ] T145 Converter `assets/sprites/` para WebP e verificar APK release < 30 MB por ABI via `flutter build apk --release --split-per-abi`
 - [x] T146 [P] Implementar tratamento de armazenamento cheio na gravação (CEN-M10-E02) em `lib/data/repositories/hive_save_repository.dart`
 - [x] T147 [P] Revisar formatação de números grandes em todas as telas usando `lib/core/numeric/number_format.dart`
-- [ ] T148 Executar a validação manual V1 a V7 de [quickstart.md](quickstart.md) §4, incluindo a contagem de interações para equipar um item (SC-007) e a travessia da wave 1 à 100 do Ato 1 sem decisão obrigatória (SC-008)
+- [ ] T148 Executar a validação manual V1 a V7 de [quickstart.md](quickstart.md) §4, incluindo a contagem de interações para equipar um item (SC-007) e a travessia da wave 1 à 100 do Ato 1 sem decisão obrigatória (SC-008) — **V1, V2 e a contagem de SC-007 automatizados** em `test/presentation/t148_ui_validation_test.dart`; V3 a V7 seguem exigindo aparelho
 - [x] T149 Executar as verificações de determinismo de [quickstart.md](quickstart.md) §5
 - [x] T150 Rodar `flutter analyze` e zerar todos os avisos em `lib/` e `test/`, respeitando as regras de `analysis_options.yaml`
 - [x] T151 Percorrer o checklist anti-plágio de `specification.md` §9 antes de qualquer publicação — resultado em [checklists/pre-launch.md](checklists/pre-launch.md)
 
 ### Tarefas bloqueadas por material ou hardware inexistente
 
-As quatro acima que seguem sem marca **não foram esquecidas** — nenhuma delas é
-executável a partir do repositório:
+As três acima que seguem sem marca **não foram esquecidas** — nenhuma delas é
+executável por inteiro a partir do repositório:
 
 - **T144** exige o **aparelho de referência** de [plan.md](plan.md) (4 GB, SoC de
   entrada, Android 10). Medir FPS na máquina de desenvolvimento e declarar
@@ -357,12 +357,37 @@ executável a partir do repositório:
   somam 25 KB em PNG, e o ganho seria de poucos quilobytes num APK de 20 MB.
   A tarefa volta a fazer sentido se a arte for substituída por sprites de
   origem externa, que costumam ser uma ordem de grandeza maiores.
-- **T148** é validação manual em dispositivo (V1 a V7 de
-  [quickstart.md](quickstart.md) §4), incluindo a contagem de toques de SC-007 e
-  a travessia de SC-008. Exige um humano com o jogo na mão.
+- **T148** encolheu. Três dos cenários não tinham nada de manual além do dedo e
+  agora rodam em `test/presentation/t148_ui_validation_test.dart`, sobre
+  `PixelIdleQuestApp`: **V1** (o laço idle progride sem um único gesto no teste),
+  **V2** (a comparação distingue ganho de perda) e a **contagem de SC-007** — 3
+  toques da tela de combate ao item equipado, com o ATK efetivo subindo e a arma
+  anterior voltando ao inventário. O que continua exigindo aparelho e humano:
+  **V3** (relógio do sistema adiantado e atrasado), **V4** (encerramento forçado
+  pelo gerenciador de apps), **V5** (widget na tela inicial e o piso de
+  agendamento do Android), **V6** (compra em ambiente de teste) e **V7** na parte
+  de conta limpa em loja real.
 
 Também segue pendente `integration_test/m11_widget_test.dart` (T098), que precisa
 de aparelho ou emulador conectado.
+
+### O que a automação de T148 encontrou
+
+Escrever esses três testes custou dois defeitos reais, ambos invisíveis para os
+429 testes anteriores:
+
+1. **Nenhum sprite de T143 chegava à tela.** O Flame resolve caminho de imagem
+   contra `assets/images/` por padrão, e a arte está em `assets/sprites/`. Todo
+   carregamento falhava, caía no `catch` de `SpriteCatalog` — que devolve `null`
+   de propósito, para a arte poder chegar em levas — e o jogo desenhava
+   retângulos coloridos. Corrigido com `Flame.images.prefix`, e agora afirmado
+   por `test/presentation/sprite_catalog_test.dart`: onde há fallback silencioso,
+   alguém tem de testar o caminho bom.
+2. **A folha de detalhe do item estourava o layout** por ~100 px na formação de
+   três heróis: um bloco de comparação e um botão por herói não cabem nos 9/16 de
+   tela do `showModalBottomSheet` padrão. Corrigido com `isScrollControlled` e
+   teto de 85%, mantendo o primeiro herói acima da dobra — rolar contaria como
+   interação em SC-007.
 
 ---
 
