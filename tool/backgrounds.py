@@ -78,6 +78,85 @@ def _base(scenery):
     return img, pixels, horizon
 
 
+def _mix(a, b, t):
+    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)) + (255,)
+
+
+def _rng(seed):
+    """Congruencial linear: aleatorio de aparencia, saida sempre a mesma.
+
+    Nao usa `random` para a arte nao mudar com a versao do Python -- um cenario
+    diferente a cada regeracao tornaria impossivel revisar um diff de PNG.
+    """
+    state = seed & 0x7FFFFFFF
+
+    def nxt(n):
+        nonlocal state
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        return state % n
+
+    return nxt
+
+
+def _ground_texture(pixels, horizon, scenery, seed, tufts=True):
+    """Textura da faixa de chao. E o que faz a rolagem **aparecer**.
+
+    Sem ela o chao e uma cor chapada -- 320 pixels identicos por linha -- e um
+    campo uniforme nao mostra deslocamento nenhum por mais rapido que role. Era
+    a causa de o jogo parecer parado no lugar com o cenario andando atras.
+
+    Tudo aqui e pontual: pedra, tufo, trinco. Faixa horizontal nao serve, porque
+    ela desliza sobre si mesma e continua lendo como parada.
+
+    Os elementos crescem em direcao a base: o que esta perto do olho e maior. E
+    o unico sinal de profundidade que uma faixa vista de lado admite.
+    """
+    nxt = _rng(seed)
+    dark = _mix(scenery.ground, scenery.silhouette, 0.55)
+    darker = _mix(scenery.ground, scenery.silhouette, 0.85)
+    light = _mix(scenery.ground, scenery.accent, 0.30)
+
+    def depth(y):
+        return (y - horizon) / GROUND_HEIGHT
+
+    # Pedras: o grosso da textura.
+    for _ in range(150):
+        x = nxt(WIDTH)
+        y = horizon + 3 + nxt(GROUND_HEIGHT - 4)
+        radius = 1 + int(depth(y) * 1.6)
+        color = dark if nxt(3) else darker
+        for dy in range(radius):
+            for dx in range(radius + 1):
+                tx, ty = x + dx, y + dy
+                if 0 <= tx < WIDTH and horizon < ty < HEIGHT:
+                    pixels[tx, ty] = color
+        # Topo iluminado: e o que faz a pedra ter volume em 2 pixels.
+        if radius > 1 and 0 <= x < WIDTH and horizon < y - 1 < HEIGHT:
+            pixels[x, y - 1] = light
+
+    # Tufos de vegetacao (ou cristais/escombros, conforme o ato).
+    if tufts:
+        for _ in range(70):
+            x = nxt(WIDTH)
+            y = horizon + 4 + nxt(GROUND_HEIGHT - 6)
+            height = 1 + int(depth(y) * 3)
+            for dy in range(height):
+                ty = y - dy
+                if 0 <= x < WIDTH and horizon < ty < HEIGHT:
+                    pixels[x, ty] = light
+                if dy and 0 <= x + 1 < WIDTH and horizon < ty < HEIGHT:
+                    pixels[x + 1, ty] = light
+
+    # Trincos: risco curto na diagonal, para o chao nao virar so bolinhas.
+    for _ in range(45):
+        x = nxt(WIDTH)
+        y = horizon + 6 + nxt(GROUND_HEIGHT - 8)
+        for step in range(2 + nxt(4)):
+            tx, ty = x + step, y + (step // 2)
+            if 0 <= tx < WIDTH and horizon < ty < HEIGHT:
+                pixels[tx, ty] = darker
+
+
 def _column(pixels, x, top, bottom, color, width=1):
     for dx in range(width):
         px = x + dx
@@ -128,6 +207,8 @@ def forest():
     for i, x in enumerate(range(0, WIDTH, 17)):
         _disc(px, x, horizon + 2 + (i % 3), 4 + (i % 2), FOREST.silhouette)
 
+    _ground_texture(px, horizon, FOREST, seed=0x5EED01)
+
     return img
 
 
@@ -157,6 +238,8 @@ def cave():
         cy = horizon - 54 - (i % 2) * 16
         _disc(px, x, cy, 3, _rgb(0x4AC5E8))
         _disc(px, x + 7, cy + 6, 2, _rgb(0x2A7E99))
+
+    _ground_texture(px, horizon, CAVE, seed=0x5EED02)
 
     return img
 
@@ -191,6 +274,8 @@ def citadel():
     # Escombros na base.
     for i, x in enumerate(range(8, WIDTH, 26)):
         _disc(px, x, horizon + 4 + (i % 2) * 3, 3, CITADEL.accent)
+
+    _ground_texture(px, horizon, CITADEL, seed=0x5EED03, tufts=False)
 
     return img
 

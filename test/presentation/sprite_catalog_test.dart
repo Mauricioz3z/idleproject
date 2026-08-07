@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flame/flame.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -160,6 +161,46 @@ void main() {
         BackgroundComponent.artWidth.toInt(),
         BackgroundComponent.artHeight.toInt(),
       );
+    }
+  });
+
+  testWidgets('a faixa de chão tem textura, senão a rolagem não aparece', (
+    tester,
+  ) async {
+    // A queixa era "parece que estamos sempre no mesmo lugar". O cenário rolava
+    // de verdade — só que o chão era uma cor chapada, 320 pixels idênticos por
+    // linha, do horizonte até a base. Campo uniforme não mostra deslocamento
+    // nenhum por mais rápido que role, e nenhum teste de posição pega isso:
+    // tudo estava no lugar certo, movendo-se na velocidade certa, e invisível.
+    await real(tester, SpriteCatalog.load);
+
+    for (final act in const ['forest', 'cave', 'citadel']) {
+      final image = await real(
+        tester,
+        () => Flame.images.load('sprites/backgrounds/$act.png'),
+      );
+      final data = await real(
+        tester,
+        () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+      );
+      final pixels = data!.buffer.asUint32List();
+
+      final groundTop =
+          image.height - BackgroundComponent.groundHeight.toInt();
+      // Linhas amostradas ao longo da faixa, pulando as duas do horizonte.
+      for (var y = groundTop + 4; y < image.height; y += 8) {
+        final distintas = <int>{};
+        for (var x = 0; x < image.width; x++) {
+          distintas.add(pixels[y * image.width + x]);
+        }
+        expect(
+          distintas.length,
+          greaterThan(2),
+          reason:
+              'a linha $y do chão de $act tem ${distintas.length} cor(es): o '
+              'chão voltou a ser chapado e a caminhada some',
+        );
+      }
     }
   });
 

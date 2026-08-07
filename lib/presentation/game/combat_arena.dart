@@ -13,6 +13,7 @@ import 'components/background_component.dart';
 import 'components/boss_component.dart';
 import 'components/combatant_component.dart';
 import 'components/damage_number_component.dart';
+import 'components/dust_puff_component.dart';
 import 'components/loot_popup_component.dart';
 import 'sprite_catalog.dart';
 
@@ -49,6 +50,7 @@ class CombatArena extends FlameGame {
   final Set<String> _dressed = {};
 
   BackgroundComponent? _background;
+  GroundParallaxComponent? _foreground;
   SpriteCatalog? _catalog;
   String? _loadedBackgroundAct;
 
@@ -84,6 +86,11 @@ class CombatArena extends FlameGame {
     final background = BackgroundComponent(act: 1)..size = _world!.clone();
     _background = background;
     world.add(background);
+
+    final foreground = GroundParallaxComponent(scenery: background.scenery)
+      ..size = _world!.clone();
+    _foreground = foreground;
+    world.add(foreground);
   }
 
   @override
@@ -93,6 +100,7 @@ class CombatArena extends FlameGame {
     // que deve reagir a tamanho — nunca o caminho de `sync`.
     _applyViewport(size);
     _background?.size = _world!.clone();
+    _foreground?.size = _world!.clone();
     // As posições dos combatentes saem do mundo, então o primeiro `sync` depois
     // daqui já as recoloca. Antecipar aqui evita um quadro com tudo no lugar
     // antigo.
@@ -121,9 +129,7 @@ class CombatArena extends FlameGame {
     Color(0xFFE8B44A),
   ];
 
-  /// Quanto os pés afundam na faixa de chão. Zero deixaria os combatentes
-  /// pousados exatamente na linha de horizonte, que lê como flutuando.
-  static const double _footInset = 16;
+  static const double _footInset = BackgroundComponent.footInset;
 
   /// Onde para quem luta na frente do time.
   ///
@@ -167,9 +173,14 @@ class CombatArena extends FlameGame {
       _footInset;
 
   /// Velocidade da rolagem do cenário durante a caminhada, em pixels de arte por
-  /// segundo. Vem da leitura, não da física: mais rápido que isto e o cenário
-  /// borra; mais devagar e o time parece patinar no lugar.
-  static const double _scrollSpeed = 70;
+  /// segundo.
+  ///
+  /// Vem da leitura, não da física. A 70 px/s o mundo andava 70 px por wave —
+  /// menos de um quarto da largura da arena, sobre um chão de cor chapada. Dava
+  /// para jogar cinquenta waves sem ver a paisagem mudar, e a sensação era a de
+  /// estar sempre no mesmo lugar. A 150 o time cruza quase meia arena por wave,
+  /// e o primeiro plano, que corre ao dobro, atravessa a tela inteira.
+  static const double _scrollSpeed = 150;
 
   /// De quanto além do seu lugar o grupo novo nasce.
   ///
@@ -215,6 +226,7 @@ class CombatArena extends FlameGame {
     if (background == null) return;
 
     background.syncAct(state.position.act);
+    _foreground?.scenery = background.scenery;
 
     final act = background.scenery.assetName;
     if (_loadedBackgroundAct != act) {
@@ -254,6 +266,11 @@ class CombatArena extends FlameGame {
     final background = _background;
     if (background != null && _isWalking) {
       background.scrollX += _scrollSpeed * dt;
+      // Uma contagem só para as duas camadas: a razão entre elas é constante
+      // (`GroundParallaxComponent.parallax`), e dois acumuladores separados
+      // acabariam divergindo por arredondamento ao longo de horas de sessão.
+      _foreground?.scrollX = background.scrollX;
+      _emitDust(dt);
     }
 
     _accumulator += dt;
@@ -264,6 +281,36 @@ class CombatArena extends FlameGame {
       steps++;
     }
     if (steps == maxStepsPerFrame) _accumulator = 0;
+  }
+
+  /// Intervalo entre baforadas de poeira, por herói.
+  static const double _dustInterval = 0.16;
+
+  double _untilDust = 0;
+
+  /// Solta poeira sob o pé de quem está andando.
+  void _emitDust(double dt) {
+    _untilDust -= dt;
+    if (_untilDust > 0) return;
+    _untilDust = _dustInterval;
+
+    final scenery = _background?.scenery;
+    if (scenery == null) return;
+
+    for (final view in _heroViews.values) {
+      if (view.isDown) continue;
+      world.add(
+        DustPuffComponent(
+          // Atrás do calcanhar, não sob o centro do corpo: poeira que sai do
+          // meio do sprite parece vazamento, não passada.
+          position: Vector2(view.position.x - 5, view.position.y - 1),
+          driftSpeed: _scrollSpeed,
+          // Um pouco mais clara que o realce do ato: na cor do próprio cenário
+          // a poeira desaparece no chão, que é onde ela precisa aparecer.
+          color: Color.lerp(scenery.accent, const Color(0xFFEDE7DA), 0.3)!,
+        ),
+      );
+    }
   }
 
   void _syncHeroes(CombatState state) {
