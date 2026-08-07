@@ -71,8 +71,14 @@ class BackgroundComponent extends PositionComponent {
   /// Imagem do ato, quando entregue. Sem ela, o cenário é desenhado.
   Sprite? sprite;
 
-  /// Altura da faixa de chão, medida a partir da base da arena.
-  static const double _groundHeight = 46;
+  /// Resolução nativa dos cenários de `assets/sprites/backgrounds/`, igual à de
+  /// `tool/backgrounds.py`. Tudo aqui é desenhado nessas coordenadas e escalado
+  /// de uma vez, então a arte e o traçado de reserva têm a mesma geometria.
+  static const double artWidth = 320;
+  static const double artHeight = 180;
+
+  /// Altura da faixa de chão, medida a partir da base da arte.
+  static const double groundHeight = 46;
 
   /// Troca o cenário quando o ato muda. Sem isto o jogador entraria no Ato 2
   /// olhando para a Floresta (CEN-M08-005).
@@ -81,33 +87,54 @@ class BackgroundComponent extends PositionComponent {
     if (next != scenery) scenery = next;
   }
 
+  /// Escala entre as coordenadas da arte e as do componente.
+  double get _scale => size.x / artWidth;
+
+  /// Onde a faixa de chão começa, em coordenadas do componente. É daqui que a
+  /// arena tira a linha em que os combatentes pisam — e o motivo de existir:
+  /// a arte é ancorada na base, então a linha de horizonte depende da altura do
+  /// componente, não de uma constante.
+  double get groundTopY => size.y - groundHeight * _scale;
+
   @override
   void render(Canvas canvas) {
     final w = size.x;
     final h = size.y;
     if (w <= 0 || h <= 0) return;
 
+    // O céu cobre tudo. Numa tela de celular a arena é bem mais alta que os
+    // 16:9 da arte, e o que sobra acima dela tem de ser cor de ato — não preto.
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = scenery.sky);
+
+    // A arte é ancorada na base e mantém a proporção nativa. Esticá-la para a
+    // altura toda deformaria o pixel art em quase 3× num aparelho em retrato,
+    // que é o que acontecia antes.
+    final scale = _scale;
+    canvas.save();
+    canvas.translate(0, h - artHeight * scale);
+    canvas.scale(scale);
+
     // Com a imagem do ato entregue, ela substitui o cenário desenhado por
     // inteiro — inclusive as silhuetas, que existem só como substituto.
     final image = sprite;
     if (image != null) {
-      image.render(canvas, size: Vector2(w, h));
+      image.render(canvas, size: Vector2(artWidth, artHeight));
+      canvas.restore();
       return;
     }
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = scenery.sky);
-
-    final groundTop = h - _groundHeight;
-    _renderSilhouettes(canvas, w, groundTop);
+    const groundTop = artHeight - groundHeight;
+    _renderSilhouettes(canvas, artWidth, groundTop);
 
     canvas.drawRect(
-      Rect.fromLTWH(0, groundTop, w, _groundHeight),
+      const Rect.fromLTWH(0, groundTop, artWidth, groundHeight),
       Paint()..color = scenery.ground,
     );
     canvas.drawRect(
-      Rect.fromLTWH(0, groundTop, w, 2),
+      const Rect.fromLTWH(0, groundTop, artWidth, 2),
       Paint()..color = scenery.accent,
     );
+    canvas.restore();
   }
 
   /// Silhuetas ao fundo: árvores na Floresta, estalactites na Caverna, torres
