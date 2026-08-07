@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:flame/flame.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pixel_idle_quest/data/repositories/content_repository_impl.dart';
+import 'package:pixel_idle_quest/presentation/game/components/background_component.dart';
 import 'package:pixel_idle_quest/presentation/game/sprite_catalog.dart';
 
 /// Os sprites de T143 chegam mesmo à tela.
@@ -57,31 +62,88 @@ void main() {
   ) async {
     final catalog = await real(tester, SpriteCatalog.load);
 
-    const comuns = [
-      'forest_bramble',
-      'forest_sprout',
-      'forest_stalker',
-      'cave_gnawer',
-      'cave_shardling',
-      'cave_maw',
-      'citadel_sentry',
-      'citadel_revenant',
-      'citadel_warden',
-    ];
-    const bosses = ['forest_warden', 'cave_hulk', 'citadel_tyrant'];
+    // Quem é boss sai do conteúdo do jogo, não de uma lista escrita à mão aqui.
+    // A primeira versão deste teste trazia `cave_hulk` como boss e `cave_maw`
+    // como comum — o contrário do que `monsters.json` diz — e passava, porque
+    // `SpriteAnimation.fromFrameData` não valida se a grade cabe na imagem:
+    // recortava quadros de 32×32 de uma folha de 64×48 e devolvia recortes
+    // fora dos limites. Verde, e mentindo.
+    final monsters = JsonContentRepository.fromJson(
+      heroClassesJson: File('assets/content/hero_classes.json').readAsStringSync(),
+      monstersJson: File('assets/content/monsters.json').readAsStringSync(),
+      runeTreeJson: '[]',
+      requireFullRuneTree: false,
+    ).monsters();
 
-    for (final id in comuns) {
+    expect(monsters.length, 12);
+    expect(monsters.where((m) => m.isBoss).length, 3, reason: 'um boss por ato');
+
+    for (final monster in monsters) {
       expect(
-        await real(tester, () => catalog.monster(id)),
+        await real(
+          tester,
+          () => catalog.monster(monster.id, isBoss: monster.isBoss),
+        ),
         isNotNull,
-        reason: 'sprite do monstro $id não carregou',
+        reason: 'sprite de ${monster.id} não carregou',
       );
     }
-    for (final id in bosses) {
+  });
+
+  testWidgets('a folha de cada sprite tem o tamanho do contrato', (
+    tester,
+  ) async {
+    // O complemento do teste acima, e a razão de ele não bastar: grade errada
+    // não lança. Só comparar as dimensões do arquivo com
+    // `contracts/assets-sprites.md` pega uma folha entregue no tamanho de outra.
+    await real(tester, SpriteCatalog.load);
+
+    Future<void> expectSize(String path, int w, int h) async {
+      final image = await real(tester, () => Flame.images.load('sprites/$path'));
       expect(
-        await real(tester, () => catalog.monster(id, isBoss: true)),
-        isNotNull,
-        reason: 'sprite do boss $id não carregou — quadro de 32×32',
+        '${image.width}x${image.height}',
+        '${w}x$h',
+        reason: 'sprites/$path fora do contrato',
+      );
+    }
+
+    final content = JsonContentRepository.fromJson(
+      heroClassesJson: File('assets/content/hero_classes.json').readAsStringSync(),
+      monstersJson: File('assets/content/monsters.json').readAsStringSync(),
+      runeTreeJson: '[]',
+      requireFullRuneTree: false,
+    );
+
+    // Heróis: quadro 16×24 na grade 4×3.
+    for (final hero in content.heroClasses()) {
+      await expectSize('heroes/${hero.id}.png', 64, 72);
+    }
+    // Monstros: 16×16 comuns, 32×32 bosses.
+    for (final monster in content.monsters()) {
+      await expectSize(
+        'monsters/${monster.id}.png',
+        monster.isBoss ? 128 : 64,
+        monster.isBoss ? 96 : 48,
+      );
+    }
+    // Ícones de item e cenários de ato.
+    for (final slot in const [
+      'weapon',
+      'armor',
+      'helmet',
+      'gloves',
+      'boots',
+      'amulet',
+      'ring',
+      'essence',
+    ]) {
+      await expectSize('items/$slot.png', 16, 16);
+    }
+    for (final act in const ['forest', 'cave', 'citadel']) {
+      await expectSize(
+        'backgrounds/$act.png',
+        BackgroundComponent.artWidth.toInt(),
+        BackgroundComponent.artHeight.toInt(),
       );
     }
   });
